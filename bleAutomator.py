@@ -10,32 +10,29 @@ import time
 from intelhex import IntelHex
 
 
-def getHandle(ble_connection, uuid):
-	ble_connection.sendline('characteristics')
-	try:
-		ble_connection.expect('char value handle: 0x([0-9a-fA-F]+), uuid: %s' % (uuid), timeout=2)
-		#handle = '0x%s' % (ble_connection.match.groups()[0])
-		handle = ble_connection.match.groups()[0]
-		print 'handle = %s' % (handle)
-		return handle
-	except pexpect.TIMEOUT, e:
-		return False
-
-def convert_uint32_to_array(value):
-	""" Convert a number into an array of 4 bytes (LSB). """
+def convert_uint32_to_uint8(value):
+	""" Convert a number into an array of 4 bytes. """
 	return [
-		(value >> 0 & 0xFF),
-		(value >> 8 & 0xFF),
+		(value >> 24 & 0xFF),
 		(value >> 16 & 0xFF),
-		(value >> 24 & 0xFF)
+		(value >> 8 & 0xFF),
+		(value >> 0 & 0xFF)
 	]
 
-def convert_uint16_to_array(value):
-	""" Convert a number into an array of 2 bytes (LSB). """
+def convert_uint16_to_uint8(value):
+	""" Convert a number into an array of 2 bytes. """
 	return [
-		(value >> 0 & 0xFF),
-		(value >> 8 & 0xFF)
+		(value >> 8 & 0xFF),
+		(value >> 0 & 0xFF)
 	]
+
+def convert_uint8_to_uint32(val):
+	""" Convert an array of 4 bytes to a uint32 """
+	return (val[0] << 24) + (val[1] << 16) + (val[2] << 8) + val[3]
+
+def convert_uint8_to_uint16(val):
+	""" Convert an array of 2 bytes to a uint16 """
+	return (val[0] << 8) + val[1]
 
 def convert_array_to_hex_string(arr):
 	hex_str = ""
@@ -45,32 +42,33 @@ def convert_array_to_hex_string(arr):
 		hex_str += "%02x" % val
 	return hex_str
 
+def convert_buffer_to_uint16_array(buffer_str):
+	""" Convert a string which represents a hex byte buffer to an uint16 array """
+	buf = buffer_str.split(" ")
+	arr16 = []
+	for i in range(0,len(buf)/2):
+		arr16.append(convert_uint8_to_uint16([int(buf[2*i], 16), int(buf[2*i+1], 16)]))
+	return arr16
 
-class BleRecorder(object):
-	# for S130
-	#ctrlpt_handle = 0x10
-	#ctrlpt_cccd_handle = 0x11
-	#data_handle = 0x0E
-
-	# for S110
-	ctrlpt_handle = '0d'      # this is automatically being discovered in the _dfu_check_mode function
-	ctrlpt_cccd_handle = '0e' # these are automatically discovered in _dfu_get_handles
-	data_handle = '0b'        # these are automatically discovered in _dfu_get_handles
-
-	def __init__(self, target_mac, interface, verbose=False):
-		self.target_mac = target_mac
+class BleAutomator(object):
+	def __init__(self, interface, verbose=False):
+		self.target_mac = ""
 		self.interface = interface
 		self.verbose = verbose
-		self.characteristics = {}
 		self.handles = {}
-		print verbose
-		print "gatttool -b '%s' -i '%s' -t random --interactive" % (target_mac, interface)
-		self.ble_conn = pexpect.spawn("gatttool -b '%s' -i '%s' -t random --interactive" % (target_mac, interface))
-		if (verbose):
-			self.ble_conn.logfile = sys.stdout
+		#print verbose
+
+	def connect(self, target_mac):
+		self.target_mac = target_mac
+		return self.scan_and_connect()
 
 	# Connect to peer device.
 	def scan_and_connect(self):
+		print "gatttool -b '%s' -i '%s' -t random --interactive" % (self.target_mac, self.interface)
+		self.ble_conn = pexpect.spawn("gatttool -b '%s' -i '%s' -t random --interactive" % (self.target_mac, self.interface))
+		if (self.verbose):
+			self.ble_conn.logfile = sys.stdout
+		
 		print "Wait for scan result and connect"
 		try:
 			self.ble_conn.expect('\[LE\]>', timeout=10)
@@ -82,9 +80,9 @@ class BleRecorder(object):
 		self.ble_conn.sendline('connect')
 		
 		try:
-			res = self.ble_conn.expect(['successful','CON'], timeout=10)
+			res = self.ble_conn.expect(['successful','CON', 'Device or resource busy (16)'], timeout=10)
 		except pexpect.TIMEOUT, e:
-			print "timeout on connect to target"
+			print "Failed to connect to %s" % (self.target_mac)
 			return False
 		
 		print 'Connected.'
@@ -104,19 +102,27 @@ class BleRecorder(object):
 			except pexpect.TIMEOUT, e:
 				break
 
+	def clearHandles(self):
+		self.handles = {}
+
 	# Get handle of a specific characteristic, cache result
 	def getHandle(self, uuid):
 		if (uuid not in self.handles):
-			handle = getHandle(self.ble_conn, uuid)
-			if not handle:
+			self.ble_conn.sendline('characteristics')
+			try:
+				self.ble_conn.expect('char value handle: 0x([0-9a-fA-F]+), uuid: %s' % (uuid), timeout=2)
+				#handle = '0x%s' % (ble_connection.match.groups()[0])
+				handle = self.ble_conn.match.groups()[0]
+				#print 'handle = %s' % (handle)
+				self.handles[uuid] = handle
+			except pexpect.TIMEOUT, e:
 				return False
-			self.handles[uuid] = handle
 		return self.handles[uuid]
 
 	# Read the value of a specific characteristic
 	# Uuid must be a string
 	# Value is returned as string
-	def readUUID(self, uuid):
+	def readString(self, uuid):
 		handle = self.getHandle(uuid)
 		if not handle:
 			return False
@@ -140,7 +146,7 @@ class BleRecorder(object):
 	# Write a value to a specific characteristic
 	# Uuid must be a string
 	# Value must be a string
-	def writeUUID(self, uuid, value):
+	def writeString(self, uuid, value):
 		handle = self.getHandle(uuid)
 		if not handle:
 			return False
@@ -155,6 +161,7 @@ class BleRecorder(object):
 
 	# Disconnect from peer device if not done already and clean up.
 	def disconnect(self):
+		self.clearHandles()
 		self.ble_conn.sendline('exit')
 		self.ble_conn.close()
 
@@ -195,36 +202,27 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit(2)
 	
-	#test = pexpect.spawn("gatttool -b '%s' -i '%s' -t random --char-read -a 0x0016" % (options.address.upper(), options.interface))
-	#test.logfile = sys.stdout
-	#try:
-		#test.expect('Characteristic value ([0-9a-fA-F ]+) \r?\n', timeout=10)
-	#except pexpect.EOF, e:
-		#print e
-	#print test.match.groups()
-	#time.sleep(10)
-	
-	ble_rec = BleRecorder(options.address.upper(), options.interface, options.verbose)
+	ble_rec = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	ble_rec.scan_and_connect()
+	ble_rec.connect(options.address.upper())
 	
 	# Get all handles and cache them
 	ble_rec.getHandles()
 	
 	# Read some characteristics
-	print ble_rec.readUUID('5b8d0001-6f20-11e4-b116-123b93f75cba')
-	print ble_rec.readUUID('5b8d0002-6f20-11e4-b116-123b93f75cba')
-	print ble_rec.readUUID('5b8d0003-6f20-11e4-b116-123b93f75cba')
-	print ble_rec.readUUID('5b8d0004-6f20-11e4-b116-123b93f75cba')
+	print ble_rec.readString('5b8d0001-6f20-11e4-b116-123b93f75cba')
+	print ble_rec.readString('5b8d0002-6f20-11e4-b116-123b93f75cba')
+	print ble_rec.readString('5b8d0003-6f20-11e4-b116-123b93f75cba')
+	print ble_rec.readString('5b8d0004-6f20-11e4-b116-123b93f75cba')
 	
 	# Write some characteristics
-	ble_rec.writeUUID('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
-	ble_rec.writeUUID('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
-	ble_rec.writeUUID('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
-	ble_rec.writeUUID('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
-	ble_rec.writeUUID('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
-	ble_rec.writeUUID('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
+	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
+	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
+	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
+	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
+	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
+	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
 	
 	# wait a second to be able to receive the disconnect event from peer device.
 	time.sleep(1)
