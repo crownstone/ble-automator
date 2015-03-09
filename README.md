@@ -1,6 +1,8 @@
 ble-automator
 ======================================
-Automate interactions with a BLE device
+Automate interactions with a BLE device. 
+
+Some of the scripts have hardcoded addresses.
 
 
 ## How to use:
@@ -10,16 +12,16 @@ An example usage is recorder.py which uses it to sample current usage of the cro
 
 Use the scripts like:
 
-   ./turnoff.py -i hci0 -a E5:C8:68:8A:BB:9C
+    ./turnoff.py -i hci0 -a E5:C8:68:8A:BB:9C
 
 ## Prerequisite:
 
 Prior to running, install:
 
-bluez
-Python 2.7
-Pexpect
-Intelhex
+* bluez
+* python 2.7
+* pexpect
+* intelhex
 
 ```
 sudo apt-get install bluez python-pip
