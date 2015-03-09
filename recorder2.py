@@ -45,7 +45,8 @@ if __name__ == '__main__':
 	
 	ble_rec = BleAutomator(options.interface, options.verbose)
 	
-	addresses = ['FD:C2:0E:76:C7:61', 'E5:C8:68:8A:BB:9C']
+	# addresses = ['FD:C2:0E:76:C7:61', 'E5:C8:68:8A:BB:9C']
+	addresses = ['E5:C8:68:8A:BB:9C']
 	address_ind = 0
 	
 	# Endless loop:
@@ -79,4 +80,4 @@ if __name__ == '__main__':
 		ble_rec.disconnect()
 		
 		time.sleep(1)
-		address_ind = (address_ind+1) % 2
+		address_ind = (address_ind+1) % len(addresses)

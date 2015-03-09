@@ -1,5 +1,8 @@
-%c=load('-ascii','bulb.txt.filtered');
-c=load('-ascii','fridge.txt.filtered');
+device='fridge';
+%device='bulb';
+file=['../data/' device '.txt.filtered'];
+c=load('-ascii',file);
+ofile=[device '.png'];
 
 % get time stamps and make them a bit smaller
 d=c(:,1)-c(1,1);
@@ -42,4 +45,14 @@ y(y>threshold)=0;
 % show log
 y=log(y+1);
 
-plot(x,y)
+% subsample
+sample_freq=100;
+x=x(1:sample_freq:end);
+y=y(1:sample_freq:end);
+
+figure(1);
+clf();
+plot(x,y);
+
+% try to save to file
+saveas(1,ofile);

@@ -8,6 +8,10 @@ Automate interactions with a BLE device
 The file bleAutomator.py contains handy function to write and read data to a BLE device.
 An example usage is recorder.py which uses it to sample current usage of the crownstone.
 
+Use the scripts like:
+
+   ./turnoff.py -i hci0 -a E5:C8:68:8A:BB:9C
+
 ## Prerequisite:
 
 Prior to running, install:
