@@ -12,12 +12,13 @@ An example usage is recorder.py which uses it to sample current usage of the cro
 
 Prior to running, install:
 
+bluez
 Python 2.7
 Pexpect
 Intelhex
 
 ```
-sudo apt-get install python-pip
+sudo apt-get install bluez python-pip
 sudo pip install pexpect
 sudo pip install intelhex --allow-unverified intelhex
 ```
