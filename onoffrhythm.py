@@ -6,6 +6,7 @@ __author__ = 'Bart van Vliet'
 import os, sys, datetime
 from bleAutomator import *
 
+charac_onoff='5b8d0001-6f20-11e4-b116-123b93f75cba'
 
 if __name__ == '__main__':
 	try:
@@ -49,6 +50,10 @@ if __name__ == '__main__':
 	addresses = ['E5:C8:68:8A:BB:9C']
 	address_ind = 0
 	
+        block = 10
+        iblock = 0
+        on = False
+
 	# Endless loop:
 	while (True):
 		# Connect to peer device.
@@ -77,6 +82,17 @@ if __name__ == '__main__':
 		
 		# wait a second to be able to receive the disconnect event from peer device.
 		time.sleep(1)
+
+                iblock+=1
+                if (iblock > block):
+                    on = ~on
+                    if (on):
+                        print "Turn device on"
+                        ble_rec.writeString(charac_onoff, 'FF')
+                    else:
+                        print "Turn device off"
+                        ble_rec.writeString(charac_onoff, '00')
+                    iblock = 0
 		
 		# Disconnect from peer device if not done already and clean up.
 		ble_rec.disconnect()
