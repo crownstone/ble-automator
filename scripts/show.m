@@ -1,5 +1,6 @@
 
 devices={"fridge", "bulb"};
+devices={"fridge"};
 
 % loop over everything multiple times
 for iter = 1:length(devices)
@@ -11,12 +12,20 @@ c=load('-ascii',file);
 ofile=[device '.png'];
 
 % configuration options
-smooth_raw_flag=true;
-smooth_avg_flag=true;
+smooth_raw_flag=false;
+smooth_avg_flag=false;
 remove_above_threshold_flag=true;
 make_log_flag=false;
 subsample_flag=false;
 apply_fft_flag=true;
+limit_sample_count_flag=true;
+make_block_flag=true;
+interpolate_flag=true;
+
+if (limit_sample_count_flag)
+	limit=500;
+	c=c(1:limit,:);
+end
 
 % get time stamps and make them a bit smaller (by subtracting first time stamp)
 d=c(:,1)-c(1,1);
@@ -71,7 +80,10 @@ rd=repmat(d,1,val_len);
 rrd=r+rd;
 % size rrd should be equal to size e
 
+% time
 x=rrd'(:);
+
+% data
 y=e'(:);
 
 printf("By appending all data points from all samples we got a vector of size %i\n", length(y));
@@ -95,6 +107,27 @@ if (smooth_avg_flag)
 	c1 = imfilter(c1, fspecial('average', [wndw 1]));
 end
 
+% the data points are not uniformly spaced over the time
+if (interpolate_flag) 
+	max_d=max(d);
+	min_d=min(d);
+	min_d=0;
+	len_d=length(d);
+	trans=find(diff(y>max(y)/2));
+%	len_d=100;
+	d1=min_d:(max_d-min_d)/(len_d-1):max_d;
+	d1=d1';
+	st=1;
+	len=450;
+	d1=d1(st:st+len);
+	d=d(st:st+len);
+	c1=c1(st:st+len);
+	y1=griddatan(d,c1,d1,"nearest");
+	d=d1;
+	c1=y1;
+end
+
+
 % show log
 if (make_log_flag) 
 	y=log(y+1);
@@ -107,28 +140,62 @@ if (subsample_flag)
 	y=y(1:sample_freq:end);
 end
 
-% as
-figure(iter);
+if (make_block_flag) 
+	% for raw data
+	block_threshold=max(y)/2;
+	y(y<block_threshold)=0;
+	y(y>=block_threshold)=block_threshold*2;
 
+	% for averaged data
+	block_threshold=max(c1)/2;
+	c1(c1<block_threshold)=0;
+	c1(c1>=block_threshold)=block_threshold*2;
+
+	trans=find(diff(c1>block_threshold));
+	fl=diff(trans);
+	printf("The following is a problem. The square wave is not really regular. It has phase shifts.\n");
+	printf("Note that this is for the averaged data!\n");
+	block_wave_transitions=fl'
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Graphics
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure(iter);
+clf();
 subplot(2,2,1);
-%clf();
 plot(x,y);
 
-%axis ("square");
+% adjust limits
+p=ylim;
+marg=p(2)*0.1;
+low=0-marg; 
+high=p(2)+marg;
+set(gca, "ylim", [low high]);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subplot(2,2,2);
 
-plot(d,c1,'.');
+%plot(d,c1,'.');
+plot(d,c1);
 p=ylim;
-set(gca, "ylim", [0 p(2) * 1.1]);
+marg=p(2)*0.1;
+low=0-marg; 
+high=p(2)+marg;
+set(gca, "ylim", [low high]);
 %axis ("square");
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subplot(2,2,3);
-periodogram(y);
+periodogram(c1);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subplot(2,2,4);
 if (apply_fft_flag) 
-	fc1=fft(y);
-	fakey=1:length(fc1);
+	fc1=fft(y/10000);
+	flen=length(fc1)/1000;
+	fakey=1:flen;
+	fc1=fc1(fakey);
 	plot(fakey,abs(fc1));
 end
 
