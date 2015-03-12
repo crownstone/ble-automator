@@ -12,7 +12,7 @@ charac='5b8d0001-6f20-11e4-b116-123b93f75cba'
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <dfu_target_address>\n\nExample:\n\tdfu.py -i hci0 -a cd:e3:4a:47:1c:e4 -f data.txt',
+		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <dfu_target_address>\n\nExample:\n\tdfu.py -i hci0 -a cd:e3:4a:47:1c:e4',
 									version='0.1')
 		
 		parser.add_option('-a', '--address',
@@ -28,13 +28,6 @@ if __name__ == '__main__':
 				type="string",
 				default="hci0",
 				help='HCI interface to be used.'
-				)
-		parser.add_option('-f', '--file',
-				action='store',
-				dest="data_file",
-				type="string",
-				default="data.txt",
-				help='File to store the data'
 				)
 		parser.add_option('-v', '--verbose',
 				action='store_true',
