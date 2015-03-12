@@ -58,9 +58,6 @@ if __name__ == '__main__':
 	# Connect to peer device.
 	ble_rec.connect(options.address)
 	
-	# Get all handles and cache them
-	ble_rec.getHandles()
-	
 	# Make the crownstone sample the current, give it some time to sample
 	ble_rec.writeString(charac, 'FF')
 	time.sleep(1)
