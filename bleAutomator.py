@@ -42,11 +42,21 @@ def convert_array_to_hex_string(arr):
 		hex_str += "%02x" % val
 	return hex_str
 
-def convert_buffer_to_uint16_array(buffer_str):
-	""" Convert a string which represents a hex byte buffer to an uint16 array """
+def convert_hex_string_to_uint8_array(buffer_str, start=0, end=False):
 	buf = buffer_str.split(" ")
+	arr = []
+	for i in range(start, end+1):
+		arr.append(int(buf[i], 16))
+	return arr
+
+def convert_buffer_to_uint16_array(buffer_str, start=0, end=False):
+	""" Convert a string which represents a hex byte buffer to an uint16 array """
+	""" Only converts buffer from start to end """
+	buf = buffer_str.split(" ")
+	if (end == False):
+		end=len(buf)-1
 	arr16 = []
-	for i in range(0,len(buf)/2):
+	for i in range(start/2, (end+1)/2):
 		arr16.append(convert_uint8_to_uint16([int(buf[2*i], 16), int(buf[2*i+1], 16)]))
 	return arr16
 

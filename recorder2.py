@@ -46,7 +46,7 @@ if __name__ == '__main__':
 	ble_rec = BleAutomator(options.interface, options.verbose)
 	
 	# addresses = ['FD:C2:0E:76:C7:61', 'E5:C8:68:8A:BB:9C']
-	addresses = ['E5:C8:68:8A:BB:9C']
+	addresses = ['CB:2F:B0:9D:C3:AA']
 	address_ind = 0
 	
 	# Endless loop:
@@ -62,16 +62,50 @@ if __name__ == '__main__':
 		time.sleep(1)
 		
 		# Read the current curve
-		#uuid = '5b8d0003-6f20-11e4-b116-123b93f75cba'
-                # Read the current consumption (average of curve)
-		uuid = '5b8d0004-6f20-11e4-b116-123b93f75cba'
+		uuid = '5b8d0003-6f20-11e4-b116-123b93f75cba'
+		# Read the current consumption (average of curve)
+		#uuid = '5b8d0004-6f20-11e4-b116-123b93f75cba'
 		curve = ble_rec.readString(uuid)
 		if (curve != False):
+			
+			print curve
+			
 			f = open(options.data_file, 'a')
 			f.write('%f %s %s' % (time.time(), addresses[address_ind], uuid))
-			curve_array = convert_buffer_to_uint16_array(curve)
-			for i in curve_array:
-				f.write(' %i' % (i))
+			
+			# Layout of the data:
+			# byte         type                     description
+			#-----------------------------------------------
+			# 0   - 1      uint16_t dataLength      length of the data in bytes, excluding these 2 bytes
+			# 2   - 3      uint16_t numSamples      number of samples
+			# 4   - 5      uint16_t firstSample    
+			# 6   - N+4    int8_t   increments[]    difference with previous sample, array is of length numSamples-1
+			# N+5 - N+8    uint32_t timeStart       timestamp of first sample
+			# N+9 - N+12   uint32_t timeEnd         timestamp of last sample
+			
+			numSamples = convert_buffer_to_uint16_array(curve, 2, 3)[0]
+			f.write(' %i' % (numSamples))
+			
+			tStart = convert_buffer_to_uint16_array(curve, numSamples+5, numSamples+9)[0]
+			tEnd = convert_buffer_to_uint16_array(curve, numSamples+9, numSamples+12)[0]
+			
+			f.write(' %i' % (tStart))
+			
+			current = convert_buffer_to_uint16_array(curve, 4, 5)[0]
+			f.write(' %i' % (current))
+			
+			if (numSamples > 1):
+				
+				increments = convert_hex_string_to_uint8_array(curve, 6, numSamples+4)
+				for inc in increments:
+					# convert uint8 to int8
+					diff = inc
+					if (diff > 127):
+						diff -= 256
+					current += diff
+					f.write(' %i' % (current))
+			
+			f.write(' %i' % (tEnd))
 			f.write('\n')
 			f.close()
 		
