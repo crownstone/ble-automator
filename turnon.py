@@ -49,11 +49,15 @@ if __name__ == '__main__':
 	ble_rec = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	ble_rec.connect(options.address)
+	if (not ble_rec.connect(options.address)):
+		exit(1)
 	
 	# Make the crownstone sample the current, give it some time to sample
-	ble_rec.writeString(charac, 'FF')
+	if (not ble_rec.writeString(charac, 'FF')):
+		exit(1)
 	time.sleep(1)
 	
 	# Disconnect from peer device if not done already and clean up.
 	ble_rec.disconnect()
+	
+	exit(0)
