@@ -13,26 +13,26 @@ from intelhex import IntelHex
 def convert_uint32_to_uint8(value):
 	""" Convert a number into an array of 4 bytes. """
 	return [
-		(value >> 24 & 0xFF),
-		(value >> 16 & 0xFF),
+		(value >> 0 & 0xFF),
 		(value >> 8 & 0xFF),
-		(value >> 0 & 0xFF)
+		(value >> 16 & 0xFF),
+		(value >> 24 & 0xFF)
 	]
 
 def convert_uint16_to_uint8(value):
 	""" Convert a number into an array of 2 bytes. """
 	return [
-		(value >> 8 & 0xFF),
-		(value >> 0 & 0xFF)
+		(value >> 0 & 0xFF),
+		(value >> 8 & 0xFF)
 	]
 
 def convert_uint8_to_uint32(val):
 	""" Convert an array of 4 bytes to a uint32 """
-	return (val[0] << 24) + (val[1] << 16) + (val[2] << 8) + val[3]
+	return (val[3] << 24) + (val[2] << 16) + (val[1] << 8) + val[0]
 
 def convert_uint8_to_uint16(val):
 	""" Convert an array of 2 bytes to a uint16 """
-	return (val[0] << 8) + val[1]
+	return (val[1] << 8) + val[0]
 
 def convert_array_to_hex_string(arr):
 	hex_str = ""
@@ -43,7 +43,11 @@ def convert_array_to_hex_string(arr):
 	return hex_str
 
 def convert_hex_string_to_uint8_array(buffer_str, start=0, end=False):
+	""" Convert a string which represents a hex byte buffer to an uint8 array """
+	""" Only converts buffer from start to end """
 	buf = buffer_str.split(" ")
+	if (end == False):
+		end=len(buf)-1
 	arr = []
 	for i in range(start, end+1):
 		arr.append(int(buf[i], 16))
@@ -57,7 +61,7 @@ def convert_buffer_to_uint16_array(buffer_str, start=0, end=False):
 		end=len(buf)-1
 	arr16 = []
 	for i in range(start/2, (end+1)/2):
-		arr16.append(convert_uint8_to_uint16([int(buf[2*i], 16), int(buf[2*i+1], 16)]))
+		arr16.append(convert_uint8_to_uint16([int(buf[2*i+1], 16), int(buf[2*i], 16)]))
 	return arr16
 
 class BleAutomator(object):
