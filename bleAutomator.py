@@ -103,7 +103,7 @@ class BleAutomator(object):
 		self.ble_conn.sendline('characteristics')
 		while (True):
 			try:
-				self.ble_conn.expect('char value handle: 0x([0-9a-fA-F]+), uuid: ([0-9a-zA-Z\-]+)\r?\n', timeout=2)
+				self.ble_conn.expect('char value handle: 0x([0-9a-fA-F]+), uuid: ([0-9a-zA-Z\-]+)\r?\n', timeout=5)
 				#handle = '0x%s' % (ble_connection.match.groups()[0])
 				handle = self.ble_conn.match.groups()[0]
 				uuid = self.ble_conn.match.groups()[1]
@@ -120,12 +120,13 @@ class BleAutomator(object):
 		if (uuid not in self.handles):
 			self.ble_conn.sendline('characteristics')
 			try:
-				self.ble_conn.expect('char value handle: 0x([0-9a-fA-F]+), uuid: %s' % (uuid), timeout=2)
+				self.ble_conn.expect('char value handle: 0x([0-9a-fA-F]+), uuid: %s' % (uuid), timeout=5)
 				#handle = '0x%s' % (ble_connection.match.groups()[0])
 				handle = self.ble_conn.match.groups()[0]
 				#print 'handle = %s' % (handle)
 				self.handles[uuid] = handle
 			except pexpect.TIMEOUT, e:
+				print 'Unable to get handle %s' % (uuid)
 				return False
 		return self.handles[uuid]
 
@@ -139,7 +140,7 @@ class BleAutomator(object):
 		self.ble_conn.sendline('char-read-hnd 0x%02s' % (handle))
 		
 		try:
-			self.ble_conn.expect('Characteristic value/descriptor: ([0-9a-fA-F ]+) \r?\n', timeout=2)
+			self.ble_conn.expect('Characteristic value/descriptor: ([0-9a-fA-F ]+) \r?\n', timeout=5)
 			# Check if the match group contains any item, not sure if this can go wrong at all
 			if (len(self.ble_conn.match.groups()) < 1):
 				return False
@@ -151,7 +152,7 @@ class BleAutomator(object):
 		# This way doesn't work well: it only returns first 20 bytes
 		#try:
 			#self.ble_conn.sendline('char-read-uuid %s' % (uuid))
-			#self.ble_conn.expect('handle: (0x[0-9a-fA-F]+)\s+value: (0x[0-9a-fA-F ]+) \r?\n', timeout=2)
+			#self.ble_conn.expect('handle: (0x[0-9a-fA-F]+)\s+value: (0x[0-9a-fA-F ]+) \r?\n', timeout=5)
 
 	# Write a value to a specific characteristic
 	# Uuid must be a string
@@ -163,7 +164,7 @@ class BleAutomator(object):
 		
 		self.ble_conn.sendline('char-write-req 0x%02s %s' % (handle, value))
 		try:
-			self.ble_conn.expect('Characteristic value was written successfully', timeout=2)
+			self.ble_conn.expect('Characteristic value was written successfully', timeout=5)
 			return True
 		except pexpect.TIMEOUT, e:
 			print "Failed to write %s to %s" % (value, uuid)
