@@ -46,7 +46,7 @@ if __name__ == '__main__':
 	ble_rec = BleAutomator(options.interface, options.verbose)
 	
 	# addresses = ['FD:C2:0E:76:C7:61', 'E5:C8:68:8A:BB:9C']
-	addresses = ['CB:2F:B0:9D:C3:AA']
+	addresses = ['DC:7F:29:0E:9B:64']
 	address_ind = 0
 	
 	# Endless loop:
@@ -76,27 +76,26 @@ if __name__ == '__main__':
 			# Layout of the data:
 			# byte         type                     description
 			#-----------------------------------------------
-			# 0   - 1      uint16_t dataLength      length of the data in bytes, excluding these 2 bytes
-			# 2   - 3      uint16_t numSamples      number of samples
-			# 4   - 5      uint16_t firstSample    
-			# 6   - N+4    int8_t   increments[]    difference with previous sample, array is of length numSamples-1
-			# N+5 - N+8    uint32_t timeStart       timestamp of first sample
-			# N+9 - N+12   uint32_t timeEnd         timestamp of last sample
+			# 0   - 1      uint16_t numSamples      number of samples, including firstSample
+			# 2   - 3      uint16_t firstSample     
+			# 4   - 5      uint16_t lastSample    
+			# 6   - 7      uint32_t timeStart       timestamp of first sample
+			# 8   - 9      uint32_t timeEnd         timestamp of last sample
+			# 10  - N+8    int8_t   increments[]    difference with previous sample, array is of length numSamples-1
 			
-			numSamples = convert_buffer_to_uint16_array(curve, 2, 3)[0]
+			numSamples = convert_hex_string_to_uint16_array(curve, 0, 1)[0]
 			f.write(' %i' % (numSamples))
 			
-			tStart = convert_buffer_to_uint16_array(curve, numSamples+5, numSamples+9)[0]
-			tEnd = convert_buffer_to_uint16_array(curve, numSamples+9, numSamples+12)[0]
-			
+			tStart = convert_hex_string_to_uint16_array(curve, 6, 7)[0]
+			tEnd = convert_hex_string_to_uint16_array(curve, 8, 9)[0]
 			f.write(' %i' % (tStart))
 			
-			current = convert_buffer_to_uint16_array(curve, 4, 5)[0]
+			current = convert_hex_string_to_uint16_array(curve, 2, 3)[0]
 			f.write(' %i' % (current))
 			
 			if (numSamples > 1):
 				
-				increments = convert_hex_string_to_uint8_array(curve, 6, numSamples+4)
+				increments = convert_hex_string_to_uint8_array(curve, 10, numSamples+8)
 				for inc in increments:
 					# convert uint8 to int8
 					diff = inc

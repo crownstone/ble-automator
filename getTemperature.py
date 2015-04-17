@@ -61,7 +61,7 @@ if __name__ == '__main__':
 	temperature = convert_uint8_to_uint32(arr8)
 	print "Temperature: %iC" % (temperature)
 	
-	time.sleep(1)
+	#time.sleep(1)
 	
 	# Disconnect from peer device if not done already and clean up.
 	ble_rec.disconnect()
