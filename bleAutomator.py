@@ -60,8 +60,8 @@ def convert_hex_string_to_uint16_array(buffer_str, start=0, end=False):
 	if (end == False):
 		end=len(buf)-1
 	arr16 = []
-	for i in range(start/2, (end+1)/2):
-		arr16.append(convert_uint8_to_uint16([int(buf[2*i], 16), int(buf[2*i+1], 16)]))
+	for i in range(0, (end+1-start)/2):
+		arr16.append(convert_uint8_to_uint16([int(buf[start+2*i], 16), int(buf[start+2*i+1], 16)]))
 	return arr16
 
 def convert_hex_string_to_uint32_array(buffer_str, start=0, end=False):
@@ -71,8 +71,8 @@ def convert_hex_string_to_uint32_array(buffer_str, start=0, end=False):
 	if (end == False):
 		end=len(buf)-1
 	arr32 = []
-	for i in range(start/4, (end+1)/4):
-		arr32.append(convert_uint8_to_uint32([int(buf[4*i], 16), int(buf[4*i+1], 16), int(buf[4*i+2], 16), int(buf[4*i+3], 16)]))
+	for i in range(0, (end+1-start)/4):
+		arr32.append(convert_uint8_to_uint32([int(buf[start+4*i], 16), int(buf[start+4*i+1], 16), int(buf[start+4*i+2], 16), int(buf[start+4*i+3], 16)]))
 	return arr32
 
 class BleAutomator(object):
