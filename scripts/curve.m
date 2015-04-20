@@ -9,8 +9,8 @@ tf=df(:,1) - df(1,1);
 vf=df(:,2:end);
 
 % Find curves where the device is on
-[i,j]=find((max(vf,[],2)>1 & max(vf,[],2)<500));
-%[i,j]=find(max(vf,[],2)>1);
+[i,j]=find((max(vf,[],2)>10 & max(vf,[],2)<500));
+%[i,j]=find(max(vf,[],2)>10);
 indf=i;
 maxf=max(max(vf(i,:)));
 
