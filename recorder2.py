@@ -61,7 +61,7 @@ if __name__ == '__main__':
 		ble_rec.connect(addresses[address_ind])
 		
 		# Get all handles and cache them
-		ble_rec.getHandles()
+		#ble_rec.getHandles()
 	
 		# Make the crownstone sample the current, give it some time to sample
 		ble_rec.writeString('5b8d0002-6f20-11e4-b116-123b93f75cba', '03')
@@ -88,13 +88,15 @@ if __name__ == '__main__':
 			# 6   - 9      uint32_t timeStart       timestamp of first sample
 			# 10  - 13     uint32_t timeEnd         timestamp of last sample
 			# 14  - N+12   int8_t   increments[]    difference with previous sample, array is of length numSamples-1
+			# N+13- 2*N+11 int8_t   dts[]            difference with previous timestamp, array is of length numSamples-1
 			
 			numSamples = convert_hex_string_to_uint16_array(curve, 0, 1)[0]
 			f.write(' %i' % (numSamples))
 			
 			tStart = convert_hex_string_to_uint32_array(curve, 6, 9)[0]
 			tEnd = convert_hex_string_to_uint32_array(curve, 10, 13)[0]
-			f.write(' %i' % (tStart))
+#			f.write(' %i' % (tStart))
+			t=tStart
 			
 			current = convert_hex_string_to_uint16_array(curve, 2, 3)[0]
 			f.write(' %i' % (current))
@@ -102,15 +104,27 @@ if __name__ == '__main__':
 			if (numSamples > 1):
 				
 				increments = convert_hex_string_to_uint8_array(curve, 14, numSamples+12)
+				dts = convert_hex_string_to_uint8_array(curve, numSamples+13, 2*numSamples+11)
 				for inc in increments:
 					# convert uint8 to int8
 					diff = inc
 					if (diff > 127):
 						diff -= 256
 					current += diff
+					
 					f.write(' %i' % (current))
+				
+				f.write(' %i' % (t))
+				for dt in dts:
+					# convert uint8 to int8
+					diff = dt
+					if (diff > 127):
+						diff -= 256
+					t += diff
+					
+					f.write(' %i' % (t))
 			
-			f.write(' %i' % (tEnd))
+#			f.write(' %i' % (tEnd))
 			f.write('\n')
 			f.close()
 		
