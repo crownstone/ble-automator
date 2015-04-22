@@ -81,7 +81,7 @@ class BleAutomator(object):
 		self.interface = interface
 		self.verbose = verbose
 		self.handles = {}
-		#print verbose
+		self.connected = False
 
 	def connect(self, target_mac):
 		self.target_mac = target_mac
@@ -111,10 +111,14 @@ class BleAutomator(object):
 			return False
 		
 		print 'Connected.'
+		self.connected = True
 		return True
 
 	# Get handles of all characteristics, cache results
 	def getHandles(self):
+		if (not self.connected):
+			print "Unable to get handles, not connected"
+			return
 		self.ble_conn.sendline('characteristics')
 		while (True):
 			try:
@@ -133,6 +137,9 @@ class BleAutomator(object):
 	# Get handle of a specific characteristic, cache result
 	def getHandle(self, uuid):
 		if (uuid not in self.handles):
+			if (not self.connected):
+				print "Unable to get handle, not connected"
+				return False
 			self.ble_conn.sendline('characteristics')
 			try:
 				self.ble_conn.expect('char value handle: 0x([0-9a-fA-F]+), uuid: %s' % (uuid), timeout=5)
