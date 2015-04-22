@@ -35,12 +35,16 @@ def convert_uint8_to_uint16(val):
 	""" Convert an array of 2 bytes to a uint16 """
 	return (val[1] << 8) + val[0]
 
+def convert_uint8_to_hex_string(val):
+	if (val > 255 or val < 0):
+		raise Exception("Value must be of type uint8")
+	hex_str = "%02x" % val
+	return hex_str
+
 def convert_array_to_hex_string(arr):
 	hex_str = ""
 	for val in arr:
-		if val > 255:
-			raise Exception("Value is greater than it is possible to represent with one byte")
-		hex_str += "%02x" % val
+		hex_str += convert_uint8_to_hex_string(val)
 	return hex_str
 
 def convert_hex_string_to_uint8_array(buffer_str, start=0, end=False):
