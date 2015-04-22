@@ -12,7 +12,7 @@ charac='5b8d0002-6f20-11e4-b116-123b93f75cba'
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <dfu_target_address>\n\nExample:\n\tdfu.py -i hci0 -a cd:e3:4a:47:1c:e4',
+		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <ble address>\n\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4',
 									version='0.1')
 		
 		parser.add_option('-a', '--address',
@@ -55,7 +55,6 @@ if __name__ == '__main__':
 	# Make the crownstone sample the current
 	if (not ble_rec.writeString(charac, '03')):
 		exit(1)
-	time.sleep(1)
 	
 	# Disconnect from peer device if not done already and clean up.
 	ble_rec.disconnect()

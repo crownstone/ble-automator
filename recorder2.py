@@ -8,7 +8,7 @@ from bleAutomator import *
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] [-f <output file>] [-c <config file>] \n\nExample:\n\tdfu.py -i hci0 -f data.txt -c config.json',
+		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] [-f <output file>] [-c <config file>] \n\nExample:\n\t%prog -i hci0 -f data.txt -c config.json',
 									version='0.1')
 		
 		parser.add_option('-i', '--interface',
@@ -44,10 +44,6 @@ if __name__ == '__main__':
 		print "For help use --help"
 		sys.exit(2)
 	
-	#if (not options.address):
-		#parser.print_help()
-		#exit(2)
-	
 	ble_rec = BleAutomator(options.interface, options.verbose)
 	
 	addresses = readAddresses(options.configFile)
@@ -60,9 +56,6 @@ if __name__ == '__main__':
 		# Connect to peer device.
 		ble_rec.connect(addresses[address_ind])
 		
-		# Get all handles and cache them
-		#ble_rec.getHandles()
-	
 		# Make the crownstone sample the current, give it some time to sample
 		ble_rec.writeString('5b8d0002-6f20-11e4-b116-123b93f75cba', '03')
 		time.sleep(1)

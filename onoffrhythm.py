@@ -10,22 +10,22 @@ charac_onoff='5b8d0001-6f20-11e4-b116-123b93f75cba'
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] \n\nExample:\n\tdfu.py -i hci0 -f data.txt',
+		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <ble address>\n\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4',
 									version='0.1')
 		
+		parser.add_option('-a', '--address',
+				action='store',
+				dest="address",
+				type="string",
+				default=None,
+				help='DFU target address. (Can be found by running "hcitool lescan")'
+				)
 		parser.add_option('-i', '--interface',
 				action='store',
 				dest="interface",
 				type="string",
 				default="hci0",
 				help='HCI interface to be used.'
-				)
-		parser.add_option('-f', '--file',
-				action='store',
-				dest="data_file",
-				type="string",
-				default="data.txt",
-				help='File to store the data'
 				)
 		parser.add_option('-v', '--verbose',
 				action='store_true',
@@ -40,62 +40,28 @@ if __name__ == '__main__':
 		print "For help use --help"
 		sys.exit(2)
 	
-	#if (not options.address):
-		#parser.print_help()
-		#exit(2)
+	if (not options.address):
+		parser.print_help()
+		exit(2)
 	
 	ble_rec = BleAutomator(options.interface, options.verbose)
 	
-	# addresses = ['FD:C2:0E:76:C7:61', 'E5:C8:68:8A:BB:9C']
-	addresses = ['E5:C8:68:8A:BB:9C']
-	address_ind = 0
+	on = False
 	
-        block = 10
-        iblock = 0
-        on = False
-
+	# Connect to peer device.
+	if (not ble_rec.connect(options.address)):
+		exit(1)
+	
 	# Endless loop:
 	while (True):
-		# Connect to peer device.
-		ble_rec.connect(addresses[address_ind])
-		
-		# Get all handles and cache them
-		ble_rec.getHandles()
+		on = ~on
+		if (on):
+			print "Turn device on"
+			ble_rec.writeString(charac_onoff, 'FF')
+		else:
+			print "Turn device off"
+			ble_rec.writeString(charac_onoff, '00')
+		time.sleep(1)
 	
-		# Make the crownstone sample the current, give it some time to sample
-		ble_rec.writeString('5b8d0002-6f20-11e4-b116-123b93f75cba', '03')
-		time.sleep(1)
-		
-		# Read the current curve
-		#uuid = '5b8d0003-6f20-11e4-b116-123b93f75cba'
-                # Read the current consumption (average of curve)
-		uuid = '5b8d0004-6f20-11e4-b116-123b93f75cba'
-		curve = ble_rec.readString(uuid)
-		if (curve != False):
-			f = open(options.data_file, 'a')
-			f.write('%f %s %s' % (time.time(), addresses[address_ind], uuid))
-			curve_array = convert_buffer_to_uint16_array(curve)
-			for i in curve_array:
-				f.write(' %i' % (i))
-			f.write('\n')
-			f.close()
-		
-		# wait a second to be able to receive the disconnect event from peer device.
-		time.sleep(1)
-
-                iblock+=1
-                if (iblock > block):
-                    on = ~on
-                    if (on):
-                        print "Turn device on"
-                        ble_rec.writeString(charac_onoff, 'FF')
-                    else:
-                        print "Turn device off"
-                        ble_rec.writeString(charac_onoff, '00')
-                    iblock = 0
-		
-		# Disconnect from peer device if not done already and clean up.
-		ble_rec.disconnect()
-		
-		time.sleep(1)
-		address_ind = (address_ind+1) % len(addresses)
+	# Disconnect from peer device if not done already and clean up.
+	ble_rec.disconnect()
