@@ -6,10 +6,9 @@ __author__ = 'Bart van Vliet'
 import os, sys, datetime
 from bleAutomator import *
 
-
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] \n\nExample:\n\tdfu.py -i hci0 -f data.txt',
+		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] [-f <output file>] [-c <config file>] \n\nExample:\n\tdfu.py -i hci0 -f data.txt -c config.json',
 									version='0.1')
 		
 		parser.add_option('-i', '--interface',
@@ -31,6 +30,12 @@ if __name__ == '__main__':
 				dest="verbose",
 				help='Be verbose.'
 				)
+		parser.add_option('-c', '--config',
+				action='store',
+				dest="configFile",
+				default="config.json",
+				help='Config file (json)'
+				)
 		
 		options, args = parser.parse_args()
 	
@@ -45,8 +50,9 @@ if __name__ == '__main__':
 	
 	ble_rec = BleAutomator(options.interface, options.verbose)
 	
-	# addresses = ['FD:C2:0E:76:C7:61', 'E5:C8:68:8A:BB:9C']
-	addresses = ['DC:7F:29:0E:9B:64']
+	addresses = readAddresses(options.configFile)
+	if (addresses == False):
+		sys.exit(1)
 	address_ind = 0
 	
 	# Endless loop:
