@@ -7,6 +7,7 @@ import os, sys
 import pexpect
 import optparse
 import time
+import json
 from intelhex import IntelHex
 
 
@@ -74,6 +75,23 @@ def convert_hex_string_to_uint32_array(buffer_str, start=0, end=False):
 	for i in range(0, (end+1-start)/4):
 		arr32.append(convert_uint8_to_uint32([int(buf[start+4*i], 16), int(buf[start+4*i+1], 16), int(buf[start+4*i+2], 16), int(buf[start+4*i+3], 16)]))
 	return arr32
+
+
+
+def readAddresses(filename):
+	""" Function to get BLE addresses from a json config file """
+	if not os.path.exists(filename):
+		return False
+	try:
+		configFile = open(filename)
+		config = json.load(configFile)
+	except Exception, e:
+		print "Could not open/parse config file: %s" % (filename)
+		print e
+		return False
+	return config["addresses"]
+
+
 
 class BleAutomator(object):
 	def __init__(self, interface, verbose=False):
