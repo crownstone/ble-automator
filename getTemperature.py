@@ -57,8 +57,8 @@ if __name__ == '__main__':
 	if (readStr == False):
 		print "Couldn't read temperature"
 		exit(1)
-	arr8 = convert_hex_string_to_uint8_array(readStr)
-	temperature = convert_uint8_to_uint32(arr8)
+	
+	temperature = convert_hex_string_to_uint32_array(readStr)[0]
 	print "Temperature: %iC" % (temperature)
 	
 	# Disconnect from peer device if not done already and clean up.

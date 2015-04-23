@@ -11,7 +11,10 @@ import json
 from intelhex import IntelHex
 
 
-def convert_uint32_to_uint8(value):
+################################################
+# Conversions between uint8, uint16 and uint32 #
+################################################
+def convert_uint32_to_uint8_array(value):
 	""" Convert a number into an array of 4 bytes. """
 	return [
 		(value >> 0 & 0xFF),
@@ -20,20 +23,46 @@ def convert_uint32_to_uint8(value):
 		(value >> 24 & 0xFF)
 	]
 
-def convert_uint16_to_uint8(value):
+def convert_uint16_to_uint8_array(value):
 	""" Convert a number into an array of 2 bytes. """
 	return [
 		(value >> 0 & 0xFF),
 		(value >> 8 & 0xFF)
 	]
 
-def convert_uint8_to_uint32(val):
+def convert_uint8_array_to_uint32(val):
 	""" Convert an array of 4 bytes to a uint32 """
 	return (val[3] << 24) + (val[2] << 16) + (val[1] << 8) + val[0]
 
-def convert_uint8_to_uint16(val):
+def convert_uint8_array_to_uint16(val):
 	""" Convert an array of 2 bytes to a uint16 """
 	return (val[1] << 8) + val[0]
+
+
+##############################
+# uint8 array to/from string #
+##############################
+
+def convert_uint8_array_to_string(arr8):
+	string = ""
+	for i in range(0, len(arr8)):
+		string += chr(arr8[i])
+	return string
+
+def convert_string_to_uint8_array(string):
+	arr8 = []
+	print range(0, len(string))
+	for i in range(0, len(string)):
+		arr8.append(ord(string[i]))
+	return arr8
+
+
+########################
+# Number to hex string #
+########################
+def convert_uint16_to_hex_string(val):
+	arr8 = convert_uint16_to_uint8_array(val)
+	return convert_uint8_array_to_hex_string(arr8)
 
 def convert_uint8_to_hex_string(val):
 	if (val > 255 or val < 0):
@@ -41,12 +70,16 @@ def convert_uint8_to_hex_string(val):
 	hex_str = "%02x" % val
 	return hex_str
 
-def convert_array_to_hex_string(arr):
-	hex_str = ""
-	for val in arr:
-		hex_str += convert_uint8_to_hex_string(val)
+def convert_uint8_array_to_hex_string(arr):
+	hex_str = convert_uint8_to_hex_string(arr[0])
+	for i in range(1, len(arr)):
+		hex_str += " " + convert_uint8_to_hex_string(arr[i])
 	return hex_str
 
+
+#######################
+# Hex string to array #
+#######################
 def convert_hex_string_to_uint8_array(buffer_str, start=0, end=False):
 	""" Convert a string which represents a hex byte buffer to an uint8 array """
 	""" Only converts buffer from start to end """
@@ -66,7 +99,7 @@ def convert_hex_string_to_uint16_array(buffer_str, start=0, end=False):
 		end=len(buf)-1
 	arr16 = []
 	for i in range(0, (end+1-start)/2):
-		arr16.append(convert_uint8_to_uint16([int(buf[start+2*i], 16), int(buf[start+2*i+1], 16)]))
+		arr16.append(convert_uint8_array_to_uint16([int(buf[start+2*i], 16), int(buf[start+2*i+1], 16)]))
 	return arr16
 
 def convert_hex_string_to_uint32_array(buffer_str, start=0, end=False):
@@ -77,11 +110,13 @@ def convert_hex_string_to_uint32_array(buffer_str, start=0, end=False):
 		end=len(buf)-1
 	arr32 = []
 	for i in range(0, (end+1-start)/4):
-		arr32.append(convert_uint8_to_uint32([int(buf[start+4*i], 16), int(buf[start+4*i+1], 16), int(buf[start+4*i+2], 16), int(buf[start+4*i+3], 16)]))
+		arr32.append(convert_uint8_array_to_uint32([int(buf[start+4*i], 16), int(buf[start+4*i+1], 16), int(buf[start+4*i+2], 16), int(buf[start+4*i+3], 16)]))
 	return arr32
 
 
-
+####################
+# Read config file #
+####################
 def readAddresses(filename):
 	""" Function to get BLE addresses from a json config file """
 	if not os.path.exists(filename):
@@ -96,7 +131,9 @@ def readAddresses(filename):
 	return config["addresses"]
 
 
-
+######################
+# BleAutomator class #
+######################
 class BleAutomator(object):
 	def __init__(self, interface, verbose=False):
 		self.target_mac = ""
