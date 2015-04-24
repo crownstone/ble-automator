@@ -12,7 +12,9 @@ charac='f5f90007-59f9-11e4-aa15-123b93f75cba'
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <ble address> -t <type> -d <value>\n\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4 -t 0 -d myCrown',
+		parser = optparse.OptionParser(usage='''%prog [-v] [-i <interface>] -a <ble address> -t <type> -d <value> [-n]
+											\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4 -t 0 -d myCrown
+											Example:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4 -t 3 -d 2 -n''',
 									version='0.1')
 		
 		parser.add_option('-a', '--address',
