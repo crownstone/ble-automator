@@ -13,7 +13,7 @@ charac_read='f5f90009-59f9-11e4-aa15-123b93f75cba'
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <ble address> -t <type>\n\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4 -t 0',
+		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <ble address> -t <type> [-n]\n\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4 -t 0 -s',
 									version='0.1')
 		
 		parser.add_option('-a', '--address',
@@ -41,6 +41,11 @@ if __name__ == '__main__':
 				type="int",
 				default=None,
 				help='What configuration to read (integer)'
+				)
+		parser.add_option('-n', '--number',
+				action='store_true',
+				dest="as_number",
+				help='Read value as number, not as string'
 				)
 		
 		options, args = parser.parse_args()
@@ -80,9 +85,13 @@ if __name__ == '__main__':
 	
 	# Fourth and on bytes is the value
 	arr8 = convert_hex_string_to_uint8_array(readStr, 3)
-	valStr = convert_uint8_array_to_string(arr8)
 	
-	print "Value: %s" % (valStr)
+	# Output as string or as single uint8
+	if (options.as_number):
+		print "Value: %i" % (arr8[0])
+	else:
+		valStr = convert_uint8_array_to_string(arr8)
+		print "Value: %s" % (valStr)
 	
 	# Disconnect from peer device if not done already and clean up.
 	ble_rec.disconnect()

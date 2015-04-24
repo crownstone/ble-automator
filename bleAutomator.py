@@ -51,7 +51,6 @@ def convert_uint8_array_to_string(arr8):
 
 def convert_string_to_uint8_array(string):
 	arr8 = []
-	print range(0, len(string))
 	for i in range(0, len(string)):
 		arr8.append(ord(string[i]))
 	return arr8
@@ -73,7 +72,7 @@ def convert_uint8_to_hex_string(val):
 def convert_uint8_array_to_hex_string(arr):
 	hex_str = convert_uint8_to_hex_string(arr[0])
 	for i in range(1, len(arr)):
-		hex_str += " " + convert_uint8_to_hex_string(arr[i])
+		hex_str += convert_uint8_to_hex_string(arr[i])
 	return hex_str
 
 
