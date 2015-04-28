@@ -52,6 +52,10 @@ if __name__ == '__main__':
 	if (not ble_rec.connect(options.address)):
 		exit(1)
 	
+	# Check if characteristic exists
+	if (not ble_rec.getHandle(charac)):
+		exit(1)
+	
 	# Write 1 to reset
 	# Write should fail, since we won't get a response
 	if (ble_rec.writeString(charac, '01')):
