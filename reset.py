@@ -53,7 +53,8 @@ if __name__ == '__main__':
 		exit(1)
 	
 	# Write 1 to reset
-	if (not ble_rec.writeString(charac, '01')):
+	# Write should fail, since we won't get a response
+	if (ble_rec.writeString(charac, '01')):
 		exit(1)
 	
 	# Disconnect from peer device if not done already and clean up.
