@@ -136,19 +136,22 @@ def readAddresses(filename):
 class BleAutomator(object):
 	def __init__(self, interface, verbose=False):
 		self.target_mac = ""
+                self.flags = "-t random"
 		self.interface = interface
 		self.verbose = verbose
 		self.handles = {}
 		self.connected = False
 
-	def connect(self, target_mac):
+	def connect(self, target_mac, flags="default"):
 		self.target_mac = target_mac
+                if (flags != "default"):
+                    self.flags = flags
 		return self.scan_and_connect()
 
 	# Connect to peer device.
 	def scan_and_connect(self):
-		print "gatttool -b '%s' -i '%s' -t random --interactive" % (self.target_mac, self.interface)
-		self.ble_conn = pexpect.spawn("gatttool -b '%s' -i '%s' -t random --interactive" % (self.target_mac, self.interface))
+		print "gatttool -b '%s' -i '%s' %s --interactive" % (self.target_mac, self.interface, self.flags)
+		self.ble_conn = pexpect.spawn("gatttool -b '%s' -i '%s' %s --interactive" % (self.target_mac, self.interface, self.flags))
 		if (self.verbose):
 			self.ble_conn.logfile = sys.stdout
 		
@@ -234,6 +237,42 @@ class BleAutomator(object):
 			#self.ble_conn.sendline('char-read-uuid %s' % (uuid))
 			#self.ble_conn.expect('handle: (0x[0-9a-fA-F]+)\s+value: (0x[0-9a-fA-F ]+) \r?\n', timeout=5)
 
+        # Read multiple values from a specific characteristic
+	# Uuid must be a string
+	# Value must be a string
+	def readStringsFirst(self, uuid):
+		handle = self.getHandle(uuid)
+                # add 1 to handle (in hex string format)
+                handle= hex( int(handle, 16) + 1 )
+		if not handle:
+			return False
+		
+		self.ble_conn.sendline('char-write-req %02s 0100' % (handle))
+		try:
+                        self.ble_conn.expect('Notification handle = 0x([0-9a-f]+) value: ([0-9a-zA-Z]+)', timeout=5)
+			if (len(self.ble_conn.match.groups()) < 2):
+				return False
+			return self.ble_conn.match.groups()[1]
+		except pexpect.TIMEOUT, e:
+			print "Failed to read from %s" % (uuid)
+			return False
+
+	def readStringsNext(self, uuid):
+		handle = self.getHandle(uuid)
+                # add 1 to handle (in hex string format)
+                handle= hex( int(handle, 16) + 1 )
+		if not handle:
+			return False
+		
+		try:
+                        self.ble_conn.expect('Notification handle = 0x([0-9a-f]+) value: ([0-9a-zA-Z]+)', timeout=60)
+			if (len(self.ble_conn.match.groups()) < 2):
+				return False
+			return self.ble_conn.match.groups()[1]
+		except pexpect.TIMEOUT, e:
+			print "Failed to read from %s" % (uuid)
+			return False
+
 	# Write a value to a specific characteristic
 	# Uuid must be a string
 	# Value must be a string
@@ -249,7 +288,7 @@ class BleAutomator(object):
 		except pexpect.TIMEOUT, e:
 			print "Failed to write %s to %s" % (value, uuid)
 			return False
-
+	
 	# Disconnect from peer device if not done already and clean up.
 	def disconnect(self):
 		self.clearHandles()

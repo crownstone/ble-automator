@@ -14,6 +14,20 @@ Use the scripts like:
 
     ./turnoff.py -i hci0 -a E5:C8:68:8A:BB:9C
 
+
+### How to use the Powermate
+
+To run the script that connects with the PowerMate button, you will first need to add it:
+
+    sudo hcitool lewladd 00:12:92:08:05:16
+
+If you set a random address for yourself, with for example `-t random` as argument you will need to do this again. Or else you will encounter this error:
+
+    [   ][00:12:92:08:05:16][LE]> connect
+    Connecting... connect error: Transport endpoint is not connected (107)
+
+During the connection attempt you will have to press the button!
+
 ## Prerequisite:
 
 Prior to running, install:
