@@ -136,7 +136,7 @@ def readAddresses(filename):
 class BleAutomator(object):
 	def __init__(self, interface, verbose=False):
 		self.target_mac = ""
-                self.flags = "-t random"
+		self.flags = "-t random"
 		self.interface = interface
 		self.verbose = verbose
 		self.handles = {}
@@ -220,8 +220,8 @@ class BleAutomator(object):
 		handle = self.getHandle(uuid)
 		if not handle:
 			return False
-		self.ble_conn.sendline('char-read-hnd 0x%02s' % (handle))
 		
+		self.ble_conn.sendline('char-read-hnd 0x%02s' % (handle))
 		try:
 			self.ble_conn.expect('Characteristic value/descriptor: ([0-9a-fA-F ]+) \r?\n', timeout=5)
 			# Check if the match group contains any item, not sure if this can go wrong at all
@@ -237,19 +237,19 @@ class BleAutomator(object):
 			#self.ble_conn.sendline('char-read-uuid %s' % (uuid))
 			#self.ble_conn.expect('handle: (0x[0-9a-fA-F]+)\s+value: (0x[0-9a-fA-F ]+) \r?\n', timeout=5)
 
-        # Read multiple values from a specific characteristic
+	# Read multiple values from a specific characteristic
 	# Uuid must be a string
 	# Value must be a string
 	def readStringsFirst(self, uuid):
 		handle = self.getHandle(uuid)
-                # add 1 to handle (in hex string format)
-                handle= hex( int(handle, 16) + 1 )
+		# add 1 to handle (in hex string format)
+		handle= hex( int(handle, 16) + 1 )
 		if not handle:
 			return False
 		
 		self.ble_conn.sendline('char-write-req %02s 0100' % (handle))
 		try:
-                        self.ble_conn.expect('Notification handle = 0x([0-9a-f]+) value: ([0-9a-zA-Z]+)', timeout=5)
+			self.ble_conn.expect('Notification handle = 0x([0-9a-f]+) value: ([0-9a-zA-Z]+)', timeout=5)
 			if (len(self.ble_conn.match.groups()) < 2):
 				return False
 			return self.ble_conn.match.groups()[1]
@@ -259,13 +259,13 @@ class BleAutomator(object):
 
 	def readStringsNext(self, uuid):
 		handle = self.getHandle(uuid)
-                # add 1 to handle (in hex string format)
-                handle= hex( int(handle, 16) + 1 )
+		# add 1 to handle (in hex string format)
+		handle= hex( int(handle, 16) + 1 )
 		if not handle:
 			return False
 		
 		try:
-                        self.ble_conn.expect('Notification handle = 0x([0-9a-f]+) value: ([0-9a-zA-Z]+)', timeout=60)
+			self.ble_conn.expect('Notification handle = 0x([0-9a-f]+) value: ([0-9a-zA-Z]+)', timeout=60)
 			if (len(self.ble_conn.match.groups()) < 2):
 				return False
 			return self.ble_conn.match.groups()[1]
