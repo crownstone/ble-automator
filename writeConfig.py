@@ -76,7 +76,10 @@ if __name__ == '__main__':
 	# First byte is the type
 	hexStr = convert_uint8_to_hex_string(options.configType)
 	
-	# Second and third bytes is the length of the data, as uint16_t
+	# Second byte is reserved for byte alignment
+	hexStr += "00"
+	
+	# Third and fourth bytes is the length of the data, as uint16_t
 	hexStr += convert_uint16_to_hex_string(len(options.configValue))
 	
 	if (options.as_number):

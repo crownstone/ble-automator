@@ -77,15 +77,16 @@ if __name__ == '__main__':
 		exit(1)
 	
 	# First byte is the type
-	# Second and third bytes is the length of the data, as uint16_t
+	# Second byte is reserved for byte alignment
+	# Third and fourth bytes is the length of the data, as uint16_t
 	arr8 = convert_hex_string_to_uint8_array(readStr, 0, 0)
 	print "Type: %i" % (arr8[0])
 	if (options.configType != arr8[0]):
 		print "Type mismatch"
 		exit(1)
 	
-	# Fourth and on bytes is the value
-	arr8 = convert_hex_string_to_uint8_array(readStr, 3)
+	# Fifth and on bytes is the value
+	arr8 = convert_hex_string_to_uint8_array(readStr, 4)
 	
 	# Output as string or as single uint8
 	if (options.as_number):
