@@ -8,7 +8,7 @@ Some of the scripts have hardcoded addresses.
 ## How to use:
 
 The file bleAutomator.py contains handy function to write and read data to a BLE device.
-An example usage is recorder.py which uses it to sample current usage of the crownstone.
+An example usage is currentRecord.py which uses it to sample current usage of the crownstone.
 
 Use the scripts like:
 
