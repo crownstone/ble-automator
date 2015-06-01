@@ -79,9 +79,7 @@ if __name__ == '__main__':
 	# Second byte is reserved for byte alignment
 	hexStr += "00"
 	
-	# Third and fourth bytes is the length of the data, as uint16_t
-	hexStr += convert_uint16_to_hex_string(len(options.configValue))
-	
+	arr8 = []
 	if (options.as_number):
 		# Write value as number
 		valInt = int(options.configValue)
@@ -89,18 +87,21 @@ if __name__ == '__main__':
 			print "Cannot write values lower than 0!"
 			exit(1)
 		
-		arr8 = []
 		if (valInt > 65535):
 			arr8 = convert_uint32_to_uint8_array(valInt)
 		elif (valInt > 255):
 			arr8 = convert_uint16_to_uint8_array(valInt)
 		else:
 			arr8.append(valInt)
-		hexStr += convert_uint8_array_to_hex_string(arr8)
 	else:
 		# Write value as string
 		arr8 = convert_string_to_uint8_array(options.configValue)
-		hexStr += convert_uint8_array_to_hex_string(arr8)
+	
+	# Third and fourth bytes is the length of the data, as uint16_t
+	hexStr += convert_uint16_to_hex_string(len(arr8))
+	
+	# Add the data
+	hexStr += convert_uint8_array_to_hex_string(arr8)
 	
 	if (not ble_rec.writeString(charac, hexStr)):
 		exit(1)
