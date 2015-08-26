@@ -51,18 +51,18 @@ if __name__ == '__main__':
 	if (not ble_rec.connect(options.address, "")):
 		exit(1)
 	
-	# Make the crownstone sample the current, give it some time to sample
+   # Make the crownstone sample the current, give it some time to sample
 	readStr = ble_rec.readStringsFirst(charac)
-        if (readStr == False):
-            print "Couldn't read button state"
-            exit(1)
-	
-        while True:
-            button_state = readStr
-            print "Button state: %s" % (button_state)
-            readStr = ble_rec.readStringsNext(charac)
-	
-	# Disconnect from peer device if not done already and clean up.
+		if (readStr == False):
+			print "Couldn't read button state"
+			exit(1)
+
+		while True:
+			button_state = readStr
+			print "Button state: %s" % (button_state)
+			readStr = ble_rec.readStringsNext(charac)
+
+   # Disconnect from peer device if not done already and clean up.
 	ble_rec.disconnect()
 	
 	exit(0)
