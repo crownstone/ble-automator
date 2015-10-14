@@ -82,9 +82,8 @@ if __name__ == '__main__':
 			# uint16_t lastVoltageSample
 			# uint32_t timeStart              timestamp of first sample
 			# uint32_t timeEnd                timestamp of last sample
-			## old ## int8_t   sampleIncrements[]     interlaced difference with previous current/voltage sample, array is of length numSamples-2
-			# int8_t   currentIncrements[]    difference with previous current sample, array is of length numSamples-1
-			# int8_t   voltageIncrements[]    difference with previous voltage sample, array is of length numSamples-1
+			# int8_t   currentIncrements[]    difference with previous current sample, array is of length floor(numSamples/2)-1
+			# int8_t   voltageIncrements[]    difference with previous voltage sample, array is of length floor(numSamples/2)-1
 			# int8_t   timeIncrements[]       difference with previous timestamp, array is of length numSamples-1
 			
 			index=0
