@@ -79,36 +79,36 @@ def convert_uint8_array_to_hex_string(arr):
 #######################
 # Hex string to array #
 #######################
-def convert_hex_string_to_uint8_array(buffer_str, start=0, end=False):
+def convert_hex_string_to_uint8_array(buffer_str, start=0, size=False):
 	""" Convert a string which represents a hex byte buffer to an uint8 array """
-	""" Only converts buffer from start to end """
+	""" Only converts buffer from start to start+size bytes """
 	buf = buffer_str.split(" ")
-	if (end == False):
-		end=len(buf)-1
+	if (size == False):
+		size=len(buf)
 	arr = []
-	for i in range(start, end+1):
+	for i in range(start, start+size):
 		arr.append(int(buf[i], 16))
 	return arr
 
-def convert_hex_string_to_uint16_array(buffer_str, start=0, end=False):
+def convert_hex_string_to_uint16_array(buffer_str, start=0, size=False):
 	""" Convert a string which represents a hex byte buffer to an uint16 array """
-	""" Only converts buffer from start to end """
+	""" Only converts buffer from start to start+size*2 bytes """
 	buf = buffer_str.split(" ")
-	if (end == False):
-		end=len(buf)-1
+	if (size == False):
+		size=len(buf)/2
 	arr16 = []
-	for i in range(0, (end+1-start)/2):
+	for i in range(0, size):
 		arr16.append(convert_uint8_array_to_uint16([int(buf[start+2*i], 16), int(buf[start+2*i+1], 16)]))
 	return arr16
 
-def convert_hex_string_to_uint32_array(buffer_str, start=0, end=False):
+def convert_hex_string_to_uint32_array(buffer_str, start=0, size=False):
 	""" Convert a string which represents a hex byte buffer to an uint32 array """
-	""" Only converts buffer from start to end """
+	""" Only converts buffer from start to start+size*4 bytes """
 	buf = buffer_str.split(" ")
-	if (end == False):
-		end=len(buf)-1
+	if (size == False):
+		size=len(buf)/4
 	arr32 = []
-	for i in range(0, (end+1-start)/4):
+	for i in range(0, size):
 		arr32.append(convert_uint8_array_to_uint32([int(buf[start+4*i], 16), int(buf[start+4*i+1], 16), int(buf[start+4*i+2], 16), int(buf[start+4*i+3], 16)]))
 	return arr32
 

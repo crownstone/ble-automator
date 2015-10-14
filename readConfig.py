@@ -79,7 +79,7 @@ if __name__ == '__main__':
 	# First byte is the type
 	# Second byte is reserved for byte alignment
 	# Third and fourth bytes is the length of the data, as uint16_t
-	arr8 = convert_hex_string_to_uint8_array(readStr, 0, 0)
+	arr8 = convert_hex_string_to_uint8_array(readStr, 0, 1)
 	print "Type: %i" % (arr8[0])
 	if (options.configType != arr8[0]):
 		print "Type mismatch"
