@@ -144,8 +144,8 @@ class BleAutomator(object):
 
 	def connect(self, target_mac, flags="default"):
 		self.target_mac = target_mac
-                if (flags != "default"):
-                    self.flags = flags
+		if (flags != "default"):
+			self.flags = flags
 		return self.scan_and_connect()
 
 	# Connect to peer device.
@@ -237,6 +237,8 @@ class BleAutomator(object):
 			#self.ble_conn.sendline('char-read-uuid %s' % (uuid))
 			#self.ble_conn.expect('handle: (0x[0-9a-fA-F]+)\s+value: (0x[0-9a-fA-F ]+) \r?\n', timeout=5)
 
+
+	# TODO: rename this to "enable notifications" and "get notification" or so
 	# Read multiple values from a specific characteristic
 	# Uuid must be a string
 	# Value must be a string
