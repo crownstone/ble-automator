@@ -3,10 +3,9 @@
 __author__ = 'Bart van Vliet'
 
 
-import os, sys, datetime
-from bleAutomator import *
-
-charac_onoff='5b8d0001-6f20-11e4-b116-123b93f75cba'
+from bleAutomator2 import *
+from ConversionUtils import *
+from Bluenet import *
 
 if __name__ == '__main__':
 	try:
@@ -44,24 +43,23 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit(2)
 	
-	ble_rec = BleAutomator(options.interface, options.verbose)
-	
-	on = False
+	ble = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	if (not ble_rec.connect(options.address)):
+	if (not ble.connect(options.address)):
 		exit(1)
-	
+
 	# Endless loop:
+	on = False
 	while (True):
-		on = ~on
+		on = not on
 		if (on):
 			print "Turn device on"
-			ble_rec.writeString(charac_onoff, 'FF')
+			ble.writeCharacteristic(CHAR_PWM, [255])
 		else:
 			print "Turn device off"
-			ble_rec.writeString(charac_onoff, '00')
+			ble.writeCharacteristic(CHAR_PWM, [0])
 		time.sleep(1)
 	
 	# Disconnect from peer device if not done already and clean up.
-	ble_rec.disconnect()
+	ble.disconnect()

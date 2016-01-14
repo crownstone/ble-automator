@@ -2,7 +2,7 @@
 
 __author__ = 'Bart van Vliet'
 
-
+""" This script is deprecated! """
 import os, sys, datetime
 from bleAutomator import *
 
@@ -54,17 +54,17 @@ if __name__ == '__main__':
 	# Endless loop:
 	while (True):
 		# Connect to peer device.
-		ble_rec.connect(addresses[address_ind])
+		ble.connect(addresses[address_ind])
 		
 		# Make the crownstone sample the current, give it some time to sample
-		ble_rec.writeString('5b8d0002-6f20-11e4-b116-123b93f75cba', '03')
+		ble.writeString('5b8d0002-6f20-11e4-b116-123b93f75cba', '03')
 		time.sleep(1)
 		
 		# Read the current curve
 		uuid = '5b8d0003-6f20-11e4-b116-123b93f75cba'
 		# Read the current consumption (average of curve)
 		#uuid = '5b8d0004-6f20-11e4-b116-123b93f75cba'
-		curve = ble_rec.readString(uuid)
+		curve = ble.readString(uuid)
 		if (curve != False):
 			
 			print curve
@@ -125,7 +125,7 @@ if __name__ == '__main__':
 		time.sleep(1)
 		
 		# Disconnect from peer device if not done already and clean up.
-		ble_rec.disconnect()
+		ble.disconnect()
 		
 		time.sleep(1)
 		address_ind = (address_ind+1) % len(addresses)

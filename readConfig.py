@@ -3,13 +3,10 @@
 __author__ = 'Bart van Vliet'
 
 
-import os, sys, datetime
-from bleAutomator import *
+from bleAutomator2 import *
+from ConversionUtils import *
+from Bluenet import *
 
-
-
-charac_select='f5f90008-59f9-11e4-aa15-123b93f75cba'
-charac_read='f5f90009-59f9-11e4-aa15-123b93f75cba'
 
 if __name__ == '__main__':
 	try:
@@ -60,42 +57,41 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit(2)
 	
-	ble_rec = BleAutomator(options.interface, options.verbose)
+	ble = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	if (not ble_rec.connect(options.address)):
+	if (not ble.connect(options.address)):
 		exit(1)
 	
 	# Write type to select
-	if (not ble_rec.writeString(charac_select, convert_uint8_to_hex_string(options.configType))):
+	if (not ble.writeCharacteristic(CHAR_CONFIG_SELECT, [options.configType])):
 		exit(1)
 	
 	# Read the value of selected type
-	readStr = ble_rec.readString(charac_read)
-	if (readStr == False):
+	arr8 = ble.readCharacteristic(CHAR_CONFIG_READ)
+	if (not arr8):
 		print "Couldn't read value"
 		exit(1)
 	
 	# First byte is the type
 	# Second byte is reserved for byte alignment
 	# Third and fourth bytes is the length of the data, as uint16_t
-	arr8 = convert_hex_string_to_uint8_array(readStr, 0, 1)
 	print "Type: %i" % (arr8[0])
 	if (options.configType != arr8[0]):
 		print "Type mismatch"
 		exit(1)
 	
-	# Fifth and on bytes is the value
-	arr8 = convert_hex_string_to_uint8_array(readStr, 4)
+	# Fifth and on bytes is the data
+	data = arr8[4:]
 	
 	# Output as string or as single uint8
 	if (options.as_number):
-		print "Value: %i" % (arr8[0])
+		print "Value: %i" % (data[0])
 	else:
-		valStr = convert_uint8_array_to_string(arr8)
+		valStr = Conversion.uint8_array_to_string(data)
 		print "Value: %s" % (valStr)
 	
 	# Disconnect from peer device if not done already and clean up.
-	ble_rec.disconnect()
+	ble.disconnect()
 	
 	exit(0)

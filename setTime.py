@@ -3,12 +3,11 @@
 __author__ = 'Bart van Vliet'
 
 
-import os, sys, time
-from bleAutomator import *
+import time
+from bleAutomator2 import *
+from ConversionUtils import *
+from Bluenet import *
 
-
-
-charac='96d20001-4bcf-11e5-885d-feff819cdc9f'
 
 if __name__ == '__main__':
 	try:
@@ -46,22 +45,22 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit(2)
 	
-	ble_rec = BleAutomator(options.interface, options.verbose)
+	ble = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	if (not ble_rec.connect(options.address)):
+	if (not ble.connect(options.address)):
 		exit(1)
 	
 	# Get unix time
 	posix_time = int(time.time())
-	arr8 = convert_uint32_to_uint8_array(posix_time)
-	hexStr = convert_uint8_array_to_hex_string(arr8)
-	
+
+	arr8 = Conversion.uint32_to_uint8_array(posix_time)
+
 	# Write unix time to characteristic
-	if (not ble_rec.writeString(charac, hexStr)):
+	if (not ble.writeCharacteristic(CHAR_SET_TIME, arr8)):
 		exit(1)
 	
 	# Disconnect from peer device if not done already and clean up.
-	ble_rec.disconnect()
+	ble.disconnect()
 	
 	exit(0)

@@ -4,11 +4,10 @@ __author__ = 'Bart van Vliet'
 
 
 import os, sys, datetime
-from bleAutomator import *
+from bleAutomator2 import *
+from ConversionUtils import *
+from Bluenet import *
 
-
-
-charac='f5f90001-59f9-11e4-aa15-123b93f75cba'
 
 if __name__ == '__main__':
 	try:
@@ -46,22 +45,22 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit(2)
 	
-	ble_rec = BleAutomator(options.interface, options.verbose)
+	ble = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	if (not ble_rec.connect(options.address)):
+	if (not ble.connect(options.address)):
 		exit(1)
 	
 	# Make the crownstone sample the current, give it some time to sample
-	readStr = ble_rec.readString(charac)
-	if (readStr == False):
+	arr8 = ble.readCharacteristic(CHAR_TEMPERATURE)
+	if (not arr8):
 		print "Couldn't read temperature"
 		exit(1)
 	
-	temperature = convert_hex_string_to_uint32_array(readStr)[0]
+	temperature = Conversion.uint8_to_uint32(arr8)
 	print "Temperature: %iC" % (temperature)
 	
 	# Disconnect from peer device if not done already and clean up.
-	ble_rec.disconnect()
+	ble.disconnect()
 	
 	exit(0)

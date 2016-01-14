@@ -3,12 +3,9 @@
 __author__ = 'Bart van Vliet'
 
 
-import os, sys, datetime
-from bleAutomator import *
+from bleAutomator2 import *
+from Bluenet import *
 
-
-
-charac='5b8d0001-6f20-11e4-b116-123b93f75cba'
 
 if __name__ == '__main__':
 	try:
@@ -46,17 +43,17 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit(2)
 	
-	ble_rec = BleAutomator(options.interface, options.verbose)
+	ble = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	if (not ble_rec.connect(options.address)):
+	if (not ble.connect(options.address)):
 		exit(1)
 	
 	# Write 0 to switch off the power
-	if (not ble_rec.writeString(charac, '00')):
+	if (not ble.writeString(CHAR_PWM, [0])):
 		exit(1)
 	
 	# Disconnect from peer device if not done already and clean up.
-	ble_rec.disconnect()
+	ble.disconnect()
 	
 	exit(0)

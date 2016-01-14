@@ -3,12 +3,8 @@
 __author__ = 'Bart van Vliet'
 
 
-import os, sys, datetime
-from bleAutomator import *
-
-
-
-charac='f5f90005-59f9-11e4-aa15-123b93f75cba'
+from bleAutomator2 import *
+from Bluenet import *
 
 if __name__ == '__main__':
 	try:
@@ -46,22 +42,18 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit(2)
 	
-	ble_rec = BleAutomator(options.interface, options.verbose)
+	ble = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	if (not ble_rec.connect(options.address)):
-		exit(1)
-	
-	# Check if characteristic exists
-	if (not ble_rec.getHandle(charac)):
+	if (not ble.connect(options.address)):
 		exit(1)
 	
 	# Write 1 to reset
 	# Write should fail, since we won't get a response
-	if (ble_rec.writeString(charac, '01')):
+	if (ble.writeCharacteristic(CHAR_RESET, [1])):
 		exit(1)
 	
 	# Disconnect from peer device if not done already and clean up.
-	ble_rec.disconnect()
+	ble.disconnect()
 	
 	exit(0)

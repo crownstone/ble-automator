@@ -8,7 +8,6 @@ import pexpect
 import optparse
 import time
 import json
-from intelhex import IntelHex
 
 
 ################################################
@@ -334,30 +333,30 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit(2)
 	
-	ble_rec = BleAutomator(options.interface, options.verbose)
+	ble = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	ble_rec.connect(options.address.upper())
+	ble.connect(options.address.upper())
 	
 	# Get all handles and cache them
-	ble_rec.getHandles()
+	ble.getHandles()
 	
 	# Read some characteristics
-	print ble_rec.readString('5b8d0001-6f20-11e4-b116-123b93f75cba')
-	print ble_rec.readString('5b8d0002-6f20-11e4-b116-123b93f75cba')
-	print ble_rec.readString('5b8d0003-6f20-11e4-b116-123b93f75cba')
-	print ble_rec.readString('5b8d0004-6f20-11e4-b116-123b93f75cba')
+	print ble.readString('5b8d0001-6f20-11e4-b116-123b93f75cba')
+	print ble.readString('5b8d0002-6f20-11e4-b116-123b93f75cba')
+	print ble.readString('5b8d0003-6f20-11e4-b116-123b93f75cba')
+	print ble.readString('5b8d0004-6f20-11e4-b116-123b93f75cba')
 	
 	# Write some characteristics
-	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
-	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
-	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
-	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
-	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
-	ble_rec.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
+	ble.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
+	ble.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
+	ble.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
+	ble.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
+	ble.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', 'ff')
+	ble.writeString('5b8d0001-6f20-11e4-b116-123b93f75cba', '00')
 	
 	# wait a second to be able to receive the disconnect event from peer device.
 	time.sleep(1)
 	
 	# Disconnect from peer device if not done already and clean up.
-	ble_rec.disconnect()
+	ble.disconnect()

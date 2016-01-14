@@ -2,13 +2,8 @@
 
 __author__ = 'Bart van Vliet'
 
-
-import os, sys, datetime
-from bleAutomator import *
-
-
-
-charac='5b8d0002-6f20-11e4-b116-123b93f75cba'
+from bleAutomator2 import *
+from Bluenet import *
 
 if __name__ == '__main__':
 	try:
@@ -46,17 +41,25 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit(2)
 	
-	ble_rec = BleAutomator(options.interface, options.verbose)
+	ble = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	if (not ble_rec.connect(options.address)):
+	if (not ble.connect(options.address)):
 		exit(1)
 	
 	# Make the crownstone sample the current
-	if (not ble_rec.writeString(charac, '03')):
+	if (not ble.writeCharacteristic(CHAR_SAMPLE_POWER, [3])):
 		exit(1)
-	
+
+	time.sleep(1)
+
+	curve = ble.readCharacteristic(CHAR_READ_POWER_CURVE)
+	if (not curve):
+		exit(1)
+
+	print "lenght:", len(curve)
+	print "data:", list(curve)
 	# Disconnect from peer device if not done already and clean up.
-	ble_rec.disconnect()
+	ble.disconnect()
 	
 	exit(0)

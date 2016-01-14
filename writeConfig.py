@@ -3,12 +3,10 @@
 __author__ = 'Bart van Vliet'
 
 
-import os, sys, datetime
-from bleAutomator import *
+from bleAutomator2 import *
+from ConversionUtils import *
+from Bluenet import *
 
-
-
-charac='f5f90007-59f9-11e4-aa15-123b93f75cba'
 
 if __name__ == '__main__':
 	try:
@@ -67,19 +65,19 @@ if __name__ == '__main__':
 		parser.print_help()
 		exit(2)
 	
-	ble_rec = BleAutomator(options.interface, options.verbose)
+	ble = BleAutomator(options.interface, options.verbose)
 	
 	# Connect to peer device.
-	if (not ble_rec.connect(options.address)):
+	if (not ble.connect(options.address)):
 		exit(1)
 	
 	# First byte is the type
-	hexStr = convert_uint8_to_hex_string(options.configType)
-	
+	arr8 = [options.configType]
+
 	# Second byte is reserved for byte alignment
-	hexStr += "00"
+	arr8.append(0)
 	
-	arr8 = []
+	data = []
 	if (options.as_number):
 		# Write value as number
 		valInt = int(options.configValue)
@@ -88,25 +86,25 @@ if __name__ == '__main__':
 			exit(1)
 		
 		if (valInt > 65535):
-			arr8 = convert_uint32_to_uint8_array(valInt)
+			data = Conversion.uint32_to_uint8_array(valInt)
 		elif (valInt > 255):
-			arr8 = convert_uint16_to_uint8_array(valInt)
+			data = Conversion.uint16_to_uint8_array(valInt)
 		else:
-			arr8.append(valInt)
+			data.append(valInt)
 	else:
 		# Write value as string
-		arr8 = convert_string_to_uint8_array(options.configValue)
+		data = Conversion.string_to_uint8_array(options.configValue)
 	
 	# Third and fourth bytes is the length of the data, as uint16_t
-	hexStr += convert_uint16_to_hex_string(len(arr8))
-	
+	arr8.extend(Conversion.uint16_to_uint8(len(data)))
+
 	# Add the data
-	hexStr += convert_uint8_array_to_hex_string(arr8)
-	
-	if (not ble_rec.writeString(charac, hexStr)):
+	arr8.extend(data)
+
+	if (not ble.writeCharacteristic(CHAR_CONFIG_WRITE, arr8)):
 		exit(1)
 	
 	# Disconnect from peer device if not done already and clean up.
-	ble_rec.disconnect()
+	ble.disconnect()
 	
 	exit(0)

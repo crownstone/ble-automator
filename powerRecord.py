@@ -3,8 +3,11 @@
 __author__ = 'Bart van Vliet'
 
 
-import os, sys, datetime, math
-from bleAutomator import *
+import math
+from bleAutomator2 import *
+import ConfigUtils
+from ConversionUtils import *
+from Bluenet import *
 
 if __name__ == '__main__':
 	try:
@@ -44,30 +47,27 @@ if __name__ == '__main__':
 		print "For help use --help"
 		sys.exit(2)
 	
-	ble_rec = BleAutomator(options.interface, options.verbose)
+	ble = BleAutomator(options.interface, options.verbose)
 	
-	addresses = readAddresses(options.configFile)
-	if (addresses == False):
+	addresses = ConfigUtils.readAddresses(options.configFile)
+	if (not addresses):
 		sys.exit(1)
 	address_ind = 0
 	
 	# Endless loop:
 	while (True):
 		# Connect to peer device.
-		ble_rec.connect(addresses[address_ind])
+		ble.connect(addresses[address_ind])
 		
 		# Make the crownstone sample the current, give it some time to sample
-		ble_rec.writeString('5b8d0002-6f20-11e4-b116-123b93f75cba', '03')
+		ble.writeCharacteristic(CHAR_SAMPLE_POWER, [3])
 		time.sleep(1)
 		
-		# Read the current curve
-		uuid = '5b8d0003-6f20-11e4-b116-123b93f75cba'
-		# Read the current consumption (average of curve)
-		#uuid = '5b8d0004-6f20-11e4-b116-123b93f75cba'
-		curve = ble_rec.readString(uuid)
-		if (curve != False):
+		# Read the power curve
+		curveArr8 = ble.readCharacteristic(CHAR_READ_POWER_CURVE)
+		if (curveArr8):
 			
-			print curve
+			print curveArr8
 			
 			f = open(options.data_file, 'a')
 			f.write('%f %s %s' % (time.time(), addresses[address_ind], uuid))
@@ -89,28 +89,33 @@ if __name__ == '__main__':
 			index=0
 			
 			# Read num samples
-			numSamples = convert_hex_string_to_uint16_array(curve, index, 1)[0]
+#			numSamples = convert_hex_string_to_uint16_array(curve, index, 1)[0]
+			numSamples = Conversion.uint8_array_to_uint16(curveArr8[index:index+2])
 			f.write(' %i' % (numSamples))
 			index+=2
 			
 			# Read first current sample
-			current = convert_hex_string_to_uint16_array(curve, index, 1)[0]
+#			current = convert_hex_string_to_uint16_array(curve, index, 1)[0]
+			current = Conversion.uint8_array_to_uint16(curveArr8[index:index+2])
 			index+=2
 			
 			# Skip reading last current sample
 			index+=2
 			
 			# Read first voltage sample
-			voltage = convert_hex_string_to_uint16_array(curve, index, 1)[0]
+#			voltage = convert_hex_string_to_uint16_array(curve, index, 1)[0]
+			voltage = Conversion.uint8_array_to_uint16(curveArr8[index:index+2])
 			index+=2
 			
 			# Skip reading last voltage sample
 			index+=2
 			
 			# Read first and last time stamp
-			tStart = convert_hex_string_to_uint32_array(curve, index, 1)[0]
+#			tStart = convert_hex_string_to_uint32_array(curve, index, 1)[0]
+			tStart = Conversion.uint8_array_to_uint32(curveArr8[index:index+4])
 			index+=4
-			tEnd = convert_hex_string_to_uint32_array(curve, index, 1)[0]
+#			tEnd = convert_hex_string_to_uint32_array(curve, index, 1)[0]
+			tEnd = Conversion.uint8_array_to_uint32(curveArr8[index:index+4])
 			index+=4
 			t=tStart
 			
@@ -121,13 +126,16 @@ if __name__ == '__main__':
 				numCurrentSamples = int(math.floor(numSamples/2))
 				numVoltageSamples = int(math.floor(numSamples/2))
 				
-				currentIncrements = convert_hex_string_to_uint8_array(curve, index, numCurrentSamples-1)
+#				currentIncrements = convert_hex_string_to_uint8_array(curve, index, numCurrentSamples-1)
+				currentIncrements = curveArr8[index : index+numCurrentSamples-1]
 				index += numCurrentSamples-1
 				
-				voltageIncrements = convert_hex_string_to_uint8_array(curve, index, numVoltageSamples-1)
+#				voltageIncrements = convert_hex_string_to_uint8_array(curve, index, numVoltageSamples-1)
+				voltageIncrements = curveArr8[index : index+numVoltageSamples-1]
 				index += numVoltageSamples-1
 				
-				dts = convert_hex_string_to_uint8_array(curve, index, numSamples-1)
+#				dts = convert_hex_string_to_uint8_array(curve, index, numSamples-1)
+				dts = curveArr8[index : index+numSamples-1]
 				index += numSamples-1
 				
 				#currentSamples = [current]
@@ -187,7 +195,7 @@ if __name__ == '__main__':
 		time.sleep(1)
 		
 		# Disconnect from peer device if not done already and clean up.
-		ble_rec.disconnect()
+		ble.disconnect()
 		
 		time.sleep(1)
 		address_ind = (address_ind+1) % len(addresses)

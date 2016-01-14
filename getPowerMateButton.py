@@ -2,7 +2,7 @@
 
 __author__ = 'Anne van Rossum'
 
-
+# TODO: This script should be updated to use bleAutomater2!
 import os, sys, datetime
 from bleAutomator import *
 
@@ -40,19 +40,19 @@ if __name__ == '__main__':
 		print e
 		print "For help use --help"
 		sys.exit(2)
-	
+
 	if (not options.address):
 		parser.print_help()
 		exit(2)
-	
+
 	ble_rec = BleAutomator(options.interface, options.verbose)
-	
+
 	# Connect to peer device.
-	if (not ble_rec.connect(options.address, "")):
+	if (not ble.connect(options.address, "")):
 		exit(1)
-	
+
 	# Make the crownstone sample the current, give it some time to sample
-	readStr = ble_rec.readStringsFirst(charac)
+	readStr = ble.readStringsFirst(charac)
 	if (readStr == False):
 		print "Couldn't read button state"
 		exit(1)
@@ -60,9 +60,9 @@ if __name__ == '__main__':
 	while True:
 		button_state = readStr
 		print "Button state: %s" % (button_state)
-		readStr = ble_rec.readStringsNext(charac)
+		readStr = ble.readStringsNext(charac)
 
 	# Disconnect from peer device if not done already and clean up.
-	ble_rec.disconnect()
+	ble.disconnect()
 	
 	exit(0)
