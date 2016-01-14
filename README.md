@@ -34,7 +34,7 @@ Prior to running, install:
 
 * bluez
 * python 2.7
-* pexpect
+* pexpect or bluepy (https://github.com/IanHarvey/bluepy)
 * intelhex
 
 ```
