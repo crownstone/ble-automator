@@ -57,7 +57,7 @@ if __name__ == '__main__':
 		print "Couldn't read temperature"
 		exit(1)
 	
-	temperature = Conversion.uint8_to_uint32(arr8)
+	temperature = Conversion.uint8_array_to_uint32(arr8)
 	print "Temperature: %iC" % (temperature)
 	
 	# Disconnect from peer device if not done already and clean up.

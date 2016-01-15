@@ -59,9 +59,10 @@ class BleAutomator(object):
 
 		for char in chars:
 			self.handles[str(char.uuid)] = char.getHandle()
-			print "handle:", char.getHandle(), "uuid:", char.uuid
+			if (self.verbose):
+				print "handle:", char.getHandle(), "uuid:", char.uuid
 
-		print self.handles
+#		print self.handles
 		# services = self.connection.discoverServices()
 		# print services
 		# for srvUUID in services:
