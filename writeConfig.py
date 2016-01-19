@@ -96,7 +96,7 @@ if __name__ == '__main__':
 		data = Conversion.string_to_uint8_array(options.configValue)
 	
 	# Third and fourth bytes is the length of the data, as uint16_t
-	arr8.extend(Conversion.uint16_to_uint8(len(data)))
+	arr8.extend(Conversion.uint16_to_uint8_array(len(data)))
 
 	# Add the data
 	arr8.extend(data)
