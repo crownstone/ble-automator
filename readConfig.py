@@ -66,6 +66,8 @@ if __name__ == '__main__':
 	# Write type to select
 	if (not ble.writeCharacteristic(CHAR_CONFIG_SELECT, [options.configType])):
 		exit(1)
+
+	time.sleep(1)
 	
 	# Read the value of selected type
 	arr8 = ble.readCharacteristic(CHAR_CONFIG_READ)
@@ -75,18 +77,31 @@ if __name__ == '__main__':
 	
 	# First byte is the type
 	# Second byte is reserved for byte alignment
-	# Third and fourth bytes is the length of the data, as uint16_t
 	print "Type: %i" % (arr8[0])
 	if (options.configType != arr8[0]):
 		print "Type mismatch"
 		exit(1)
-	
+
+	# Third and fourth bytes is the length of the data, as uint16_t
+	length = Conversion.uint8_array_to_uint16(arr8[2:4])
+
 	# Fifth and on bytes is the data
 	data = arr8[4:]
+	if (len(data) != length):
+		print "Size mismatch"
+		print "data:", list(arr8)
+		exit(1)
 	
 	# Output as string or as single uint8
 	if (options.as_number):
-		print "Value: %i" % (data[0])
+		if (length == 1):
+			print "Value: %i" % (data[0])
+		elif (length == 2):
+			print "Value: %i" % (Conversion.uint8_array_to_uint16(data))
+		elif (length == 4):
+			print "Value: %i" % (Conversion.uint8_array_to_uint32(data))
+		else:
+			print "Value:", list(data)
 	else:
 		valStr = Conversion.uint8_array_to_string(data)
 		print "Value: %s" % (valStr)
