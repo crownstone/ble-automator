@@ -42,8 +42,9 @@ class BleAutomator(object):
 
 
 	def disconnect(self):
+		if (self.connection):
+			self.connection.disconnect()
 		self.clearHandles()
-		self.connection.disconnect()
 
 	# Get handles of all characteristics, cache results
 	def getHandles(self):
@@ -75,19 +76,16 @@ class BleAutomator(object):
 		return True
 
 	def clearHandles(self):
-#		 self.handles = {}
+		self.handles = {}
 		pass
 
 	# Get handle of a specific characteristic, cache result
 	def getHandle(self, uuid):
 		if (uuid not in self.handles):
-			if (not self.connected):
-				print "Unable to get handle, not connected"
+			if (not self.getHandles()):
 				return False
-			else:
-				self.getHandles()
-				if (uuid not in self.handles):
-					return False
+			if (uuid not in self.handles):
+				return False
 		return self.handles[uuid]
 
 	def readCharacteristic(self, uuid):
@@ -110,7 +108,7 @@ class BleAutomator(object):
 
 	def writeCharacteristic(self, uuid, data):
 		"""
-		Write a value to a specific characteristic
+		Write a value to a specific characteristic uuid
 		:param uuid: The uuid of the characteristic
 		:type uuid: str
 		:param data: The data to send
@@ -120,8 +118,19 @@ class BleAutomator(object):
 		handle = self.getHandle(uuid)
 		if not handle:
 			return False
+		return self.writeCharacteristicHandle(handle, data)
+
+	def writeCharacteristicHandle(self, handle, data):
+		"""
+		Write a value to a specific characteristic handle
+		:param handle: The handle of the characteristic
+		:type handle: str
+		:param data: The data to send
+		:type data: bytearray | List
+		:rtype: bool
+		"""
 		try:
-			self.connection.writeCharacteristic(handle, bytearray(data), False)
+			self.connection.writeCharacteristic(handle, bytearray(data), True)
 		except bluepy.btle.BTLEException, e:
 			print e
 			return False

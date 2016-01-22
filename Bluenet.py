@@ -3,17 +3,25 @@ __author__ = 'Bart van Vliet'
 import math
 from ConversionUtils import *
 
-CHAR_TEMPERATURE =      "f5f90001-59f9-11e4-aa15-123b93f75cba"
-CHAR_RESET =            "f5f90005-59f9-11e4-aa15-123b93f75cba"
-CHAR_CONFIG_WRITE =     "f5f90007-59f9-11e4-aa15-123b93f75cba"
-CHAR_CONFIG_SELECT =    "f5f90008-59f9-11e4-aa15-123b93f75cba"
-CHAR_CONFIG_READ =      "f5f90009-59f9-11e4-aa15-123b93f75cba"
+CHAR_TEMPERATURE =       "f5f90001-59f9-11e4-aa15-123b93f75cba"
+CHAR_RESET =             "f5f90005-59f9-11e4-aa15-123b93f75cba"
+CHAR_CONFIG_WRITE =      "f5f90007-59f9-11e4-aa15-123b93f75cba"
+CHAR_CONFIG_SELECT =     "f5f90008-59f9-11e4-aa15-123b93f75cba"
+CHAR_CONFIG_READ =       "f5f90009-59f9-11e4-aa15-123b93f75cba"
 
-CHAR_PWM =              "5b8d0001-6f20-11e4-b116-123b93f75cba"
-CHAR_SAMPLE_POWER =     "5b8d0002-6f20-11e4-b116-123b93f75cba"
-CHAR_READ_POWER_CURVE = "5b8d0003-6f20-11e4-b116-123b93f75cba"
+CHAR_PWM =               "5b8d0001-6f20-11e4-b116-123b93f75cba"
+CHAR_SAMPLE_POWER =      "5b8d0002-6f20-11e4-b116-123b93f75cba"
+CHAR_READ_POWER_CURVE =  "5b8d0003-6f20-11e4-b116-123b93f75cba"
 
-CHAR_SET_TIME =         "96d20001-4bcf-11e5-885d-feff819cdc9f"
+CHAR_SET_TIME =          "96d20001-4bcf-11e5-885d-feff819cdc9f"
+
+CHAR_DFU_CONTROL_POINT = "00001531-1212-efde-1523-785feabcd123"
+CHAR_DFU_PACKET =        "00001532-1212-efde-1523-785feabcd123"
+CHAR_DFU_VERION =        "00001534-1212-efde-1523-785feabcd123"
+
+RESET_CODE_RESET = 1
+RESET_CODE_DFU = 66
+
 
 class Bluenet:
 	@staticmethod
@@ -127,3 +135,20 @@ class Bluenet:
 			print "Last timestamp: %i should be: %i" % (t, tEnd)
 
 		return res
+
+	# Copied implementation of nordic
+	@staticmethod
+	def crc16_ccitt(arr8, length):
+		"""
+		:param arr8:
+		:param length:
+		:return:
+		"""
+		crc = 0xFFFF
+		for i in range(0, length):
+			crc = (crc >> 8 & 0xFF) | (crc << 8 & 0xFFFF)
+			crc ^= arr8[i]
+			crc ^= (crc & 0xFF) >> 4
+			crc ^= (crc << 8 & 0xFFFF) << 4 & 0xFFFF
+			crc ^= ((crc & 0xFF) << 4 & 0xFFFF) << 1 & 0xFFFF
+		return crc

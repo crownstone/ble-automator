@@ -30,6 +30,11 @@ if __name__ == '__main__':
 				dest="verbose",
 				help='Be verbose.'
 				)
+		parser.add_option('-d', '--dfu-mode',
+				action='store_true',
+				dest="dfu",
+				help="Reset and enter dfu mode."
+				)
 		
 		options, args = parser.parse_args()
 	
@@ -47,10 +52,14 @@ if __name__ == '__main__':
 	# Connect to peer device.
 	if (not ble.connect(options.address)):
 		exit(1)
-	
+
+	resetCode = RESET_CODE_RESET
+	if (options.dfu):
+		resetCode = RESET_CODE_DFU
+
 	# Write 1 to reset
 	# Write should fail, since we won't get a response
-	if (ble.writeCharacteristic(CHAR_RESET, [1])):
+	if (ble.writeCharacteristic(CHAR_RESET, [resetCode])):
 		exit(1)
 	
 	# Disconnect from peer device if not done already and clean up.
