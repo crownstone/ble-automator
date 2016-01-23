@@ -57,22 +57,25 @@ CHUNK_SIZE = 20
 
 class BleDfuUploader(object):
 
-	def __init__(self, bleAddress, hexfilePath, interface, logger):
+	def __init__(self, bleAddress, hexfilePath, interface, logger, imageType=DfuImageType.APPLICATION):
 		"""
-		:type bleAddress:   str
 		:param bleAddress:  Bluetooth address of the target device
-		:type hexfilePath:  str
+		:type bleAddress:   str
 		:param hexfilePath: Path where the .hex file to upload can be found
-		:type interface:    str
+		:type hexfilePath:  str
 		:param interface:   Interface to use (for example: hci0)
-		:type logger:       logging.Logger
+		:type interface:    str
 		:param logger:
+		:type logger:       logging.Logger
+		:param imageType:   Type of image to be sent (app, bootloader, softdevice)
+		:type imageType:    DfuImageType
 		:return:
 		"""
 		self.hexfilePath = hexfilePath
 		self.address = bleAddress
 		self.interface = interface
 		self.log = logger
+		self.imageType = imageType
 		self.enableDfuAttemptNum = 0
 		self.ble = BleAutomator(self.interface)
 
@@ -184,11 +187,19 @@ class BleDfuUploader(object):
 		self.log.i("Hex file size: %i crc: %i" % (binSize, crc))
 
 		# Start DFU
-		if not self._sendOpcode(DfuOpcode.START_DFU, DfuImageType.APPLICATION):
+		if not self._sendOpcode(DfuOpcode.START_DFU, self.imageType):
 			return False
 
 		# Send image size
-		if not self._sendImageSize(0, 0, binSize):
+		softdeviceSize=0
+		bootloaderSize=0
+		appSize=0
+		if (self.imageType == DfuImageType.APPLICATION):
+			appSize = binSize
+		elif (self.imageType == DfuImageType.BOOTLOADER):
+			bootloaderSize = binSize
+
+		if not self._sendImageSize(softdeviceSize, bootloaderSize, appSize):
 			return False
 
 		# Seems like we need to wait for pstorage clear to be done here
@@ -279,6 +290,12 @@ if __name__ == '__main__':
 				dest="debug",
 				help='Debug mode.'
 		)
+		parser.add_option('-B', '--bootloader',
+				action='store_true',
+				dest="bootloader",
+				help='Upload new bootloader.'
+		)
+
 		options, args = parser.parse_args()
 
 	except Exception, e:
@@ -299,8 +316,11 @@ if __name__ == '__main__':
 	if (options.debug):
 		log.setLogLevel(logging.LogLevel.DEBUG2)
 
+	imageType = DfuImageType.APPLICATION
+	if (options.bootloader):
+		imageType = DfuImageType.BOOTLOADER
 
-	ble_dfu = BleDfuUploader(options.address.upper(), options.hex_file, options.interface, log)
+	ble_dfu = BleDfuUploader(options.address.upper(), options.hex_file, options.interface, log, imageType)
 
 	# Connect to peer device.
 	ble_dfu.connect()
