@@ -53,6 +53,18 @@ if __name__ == '__main__':
 				default=None,
 				help='Value to set'
 				)
+		parser.add_option('-s', '--size',
+				action='store',
+				dest="configSize",
+				type="int",
+				default=0,
+				help='Size of the data (amount of bytes) (integer)'
+				)
+		parser.add_option('-m', '--mesh',
+				action='store_true',
+				dest="viaMesh",
+				help='Write value over the mesh'
+				)
 		
 		options, args = parser.parse_args()
 	
@@ -84,25 +96,45 @@ if __name__ == '__main__':
 		if (valInt < 0):
 			print "Cannot write values lower than 0!"
 			exit(1)
-		
-		if (valInt > 65535):
+
+		if (valInt > 65535 or options.configSize == 4):
 			data = Conversion.uint32_to_uint8_array(valInt)
-		elif (valInt > 255):
+		elif (valInt > 255 or options.configSize == 2):
 			data = Conversion.uint16_to_uint8_array(valInt)
 		else:
-			data.append(valInt)
+			data = [valInt]
 	else:
 		# Write value as string
 		data = Conversion.string_to_uint8_array(options.configValue)
-	
+
 	# Third and fourth bytes is the length of the data, as uint16_t
-	arr8.extend(Conversion.uint16_to_uint8_array(len(data)))
+	dataSize = len(data)
+	if (options.configSize > 0):
+		dataSize = options.configSize
+		if (len(data) < dataSize):
+			# append zeroes
+			data.extend([0]*(dataSize - len(data)))
+		elif (len(data) > dataSize):
+			print "Invalid data size"
+			print "Expected %i, got %i" % (dataSize, len(data))
+			exit(1)
+	arr8.extend(Conversion.uint16_to_uint8_array(dataSize))
 
 	# Add the data
 	arr8.extend(data)
 
-	if (not ble.writeCharacteristic(CHAR_CONFIG_WRITE, arr8)):
-		exit(1)
+	if (options.viaMesh):
+		meshArr8 = [MeshHandleType.DATA, 0] # Handle
+		meshArr8.extend(Conversion.uint16_to_uint8_array(6+2+len(arr8))) # Length of target address + mesh message type + data
+		meshArr8.extend([0,0,0,0,0,0]) # target address: all 0 to target any node
+		meshArr8.extend(Conversion.uint16_to_uint8_array(MeshDataMessageType.CONFIG_MESSAGE))
+		meshArr8.extend(arr8)
+		print meshArr8
+		if (not ble.writeCharacteristic(CHAR_MESH, meshArr8)):
+			exit(1)
+	else:
+		if (not ble.writeCharacteristic(CHAR_CONFIG_WRITE, arr8)):
+			exit(1)
 	
 	# Disconnect from peer device if not done already and clean up.
 	ble.disconnect()

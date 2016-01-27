@@ -5,6 +5,7 @@ from ConversionUtils import *
 
 CHAR_TEMPERATURE =       "f5f90001-59f9-11e4-aa15-123b93f75cba"
 CHAR_RESET =             "f5f90005-59f9-11e4-aa15-123b93f75cba"
+CHAR_MESH =              "f5f90006-59f9-11e4-aa15-123b93f75cba"
 CHAR_CONFIG_WRITE =      "f5f90007-59f9-11e4-aa15-123b93f75cba"
 CHAR_CONFIG_SELECT =     "f5f90008-59f9-11e4-aa15-123b93f75cba"
 CHAR_CONFIG_READ =       "f5f90009-59f9-11e4-aa15-123b93f75cba"
@@ -22,6 +23,19 @@ CHAR_DFU_VERION =        "00001534-1212-efde-1523-785feabcd123"
 RESET_CODE_RESET = 1
 RESET_CODE_DFU = 66
 
+class MeshHandleType:
+	HUB =  1
+	DATA = 2
+
+class MeshDataMessageType:
+	EVENT_MESSAGE =   0
+	POWER_MESSAGE =   1
+	BEACON_MESSAGE =  2
+	COMMAND_MESSAGE = 3
+	CONFIG_MESSAGE = 4
+
+class MeshCommandType:
+	SCAN_START = 1
 
 class Bluenet:
 	@staticmethod
