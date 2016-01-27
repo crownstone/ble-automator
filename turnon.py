@@ -50,7 +50,7 @@ if __name__ == '__main__':
 		exit(1)
 	
 	# Write 255 to switch on the power
-	if (not ble.writeString(CHAR_PWM, [255])):
+	if (not ble.writeCharacteristic(CHAR_PWM, [255])):
 		exit(1)
 	
 	# Disconnect from peer device if not done already and clean up.
