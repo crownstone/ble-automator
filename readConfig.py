@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
 	# Fifth and on bytes is the data
 	data = arr8[4:]
-	if (len(data) != length):
+	if (len(data) < length):
 		print "Size mismatch"
 		print "data:", list(arr8)
 		exit(1)
