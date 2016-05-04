@@ -15,6 +15,8 @@ CHAR_SAMPLE_POWER =      "5b8d0002-6f20-11e4-b116-123b93f75cba"
 CHAR_READ_POWER_CURVE =  "5b8d0003-6f20-11e4-b116-123b93f75cba"
 
 CHAR_SET_TIME =          "96d20001-4bcf-11e5-885d-feff819cdc9f"
+CHAR_WRITE_SCHEDULE =    "96d20002-4bcf-11e5-885d-feff819cdc9f"
+CHAR_LIST_SCHEDULE =     "96d20003-4bcf-11e5-885d-feff819cdc9f"
 
 CHAR_DFU_CONTROL_POINT = "00001531-1212-efde-1523-785feabcd123"
 CHAR_DFU_PACKET =        "00001532-1212-efde-1523-785feabcd123"
@@ -32,10 +34,33 @@ class MeshDataMessageType:
 	POWER_MESSAGE =   1
 	BEACON_MESSAGE =  2
 	COMMAND_MESSAGE = 3
-	CONFIG_MESSAGE = 4
+	CONFIG_MESSAGE =  4
 
 class MeshCommandType:
 	SCAN_START = 1
+
+
+
+class ScheduleTimeType:
+	TIME_REPEAT = 0
+	DAILY       = 1
+
+class ScheduleActionType:
+	PWM         = 0
+	FADE        = 1
+
+class ScheduleOverride:
+	PRESENCE    = 1
+
+class ScheduleDaily:
+	ALL_DAYS    = 0
+	SUNDAYS     = 1
+	MONDAYS     = 2
+	TUESDAYS    = 3
+	WEDNESDAYS  = 4
+	THURSDAYS   = 5
+	FRIDAYS     = 6
+	SATURDAYS   = 7
 
 class Bluenet:
 	@staticmethod
