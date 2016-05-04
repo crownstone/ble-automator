@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 
-__author__ = 'Anne van Rossum'
-
-# TODO: This script should be updated to use bleAutomater2!
-import os, sys, datetime
-from bleAutomator import *
+__author__ = 'Bart van Vliet'
 
 
-charac='9cf53570-ddd9-47f3-ba63-09acefc60415'
+import time
+import datetime
+from bleAutomator2 import *
+from ConversionUtils import *
+from Bluenet import *
+
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <ble address>\n\nExample:\n\t%prog -i hci0 -a 00:12:92:08:05:16',
-				version='0.1')
-
+		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <ble address>\n\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4',
+									version='0.1')
+		
 		parser.add_option('-a', '--address',
 				action='store',
 				dest="address",
@@ -33,34 +34,33 @@ if __name__ == '__main__':
 				dest="verbose",
 				help='Be verbose.'
 				)
-
+		
 		options, args = parser.parse_args()
-
+	
 	except Exception, e:
 		print e
 		print "For help use --help"
 		sys.exit(2)
-
+	
 	if (not options.address):
 		parser.print_help()
 		exit(2)
-
+	
 	ble = BleAutomator(options.interface, options.verbose)
-
+	
 	# Connect to peer device.
-	if (not ble.connect(options.address, "")):
+	if (not ble.connect(options.address)):
 		exit(1)
 
-	# Make the crownstone sample the current, give it some time to sample
-	readStr = ble.readStringsFirst(charac)
-	if (readStr == False):
-		print "Couldn't read button state"
+	arr8 = ble.readCharacteristic(CHAR_SET_TIME)
+	if not arr8:
+		print "Unable to read time"
 		exit(1)
 
-	while True:
-		button_state = readStr
-		print "Button state: %s" % (button_state)
-		readStr = ble.readStringsNext(charac)
+	posixTime = Conversion.uint8_array_to_uint32(arr8)
+
+	print time.ctime(posixTime)
+	# print datetime.datetime.fromtimestamp(posixTime)
 
 	# Disconnect from peer device if not done already and clean up.
 	ble.disconnect()
