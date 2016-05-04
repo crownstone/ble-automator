@@ -11,6 +11,19 @@ import json
 import bluepy.btle
 
 
+class BleDelegate(bluepy.btle.DefaultDelegate):
+	def __init__(self):
+		bluepy.btle.DefaultDelegate.__init__(self)
+		self.data = None
+		self.handle = None
+
+	def handleNotification(self, cHandle, data):
+		# print "Notification:"
+		# print cHandle
+		# print data
+		self.data = data
+		self.handle = cHandle
+
 ######################
 # BleAutomator class #
 ######################
@@ -24,6 +37,7 @@ class BleAutomator(object):
 		self.connected = False
 #		self.connection = bluepy.btle.Peripheral(None, bluepy.btle.ADDR_TYPE_PUBLIC, self.interface)
 		self.connection = bluepy.btle.Peripheral()
+		self.delegate = BleDelegate()
 
 	def connect(self, targetAddress, flags="default"):
 		self.targetAddress = targetAddress
@@ -37,6 +51,7 @@ class BleAutomator(object):
 			return False
 
 		self.connected = True
+		self.connection.setDelegate(self.delegate)
 		print "Connected."
 		return True
 
@@ -135,6 +150,11 @@ class BleAutomator(object):
 			print e
 			return False
 		return True
+
+	def waitForNotification(self, timeMs):
+		if (self.connection.waitForNotifications(timeMs)):
+			return {"handle":self.delegate.handle, "data":bytearray(self.delegate.data)}
+
 
 if __name__ == '__main__':
 	ble = BleAutomator("hci1")
