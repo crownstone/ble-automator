@@ -34,7 +34,8 @@ Prior to running, install:
 
 * bluez
 * python 2.7
-* pexpect or bluepy (https://github.com/IanHarvey/bluepy)
+* [bluepy](https://github.com/IanHarvey/bluepy)
+  * Currently you have to get an older version: `git checkout v/0.9.11`
 * intelhex
 
 ```
