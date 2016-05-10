@@ -35,7 +35,7 @@ Prior to running, install:
 * bluez
 * python 2.7
 * [bluepy](https://github.com/IanHarvey/bluepy) - Currently you have to get an older version:
-  * `sudo apt-get install git build-essential libglib2.0-dev`
+  * `sudo apt-get install git build-essential libglib2.0-dev libdbus-1-dev`
   * `git clone https://github.com/IanHarvey/bluepy.git`
   * `cd bluepy`
   * `git checkout v/0.9.11`
