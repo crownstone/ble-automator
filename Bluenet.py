@@ -13,7 +13,7 @@ CHAR_CONFIG_READ =       "f5f90009-59f9-11e4-aa15-123b93f75cba"
 CHAR_PWM =               "5b8d0001-6f20-11e4-b116-123b93f75cba"
 CHAR_SAMPLE_POWER =      "5b8d0002-6f20-11e4-b116-123b93f75cba"
 CHAR_READ_POWER_CURVE =  "5b8d0003-6f20-11e4-b116-123b93f75cba"
-CHAR_RELAY = 			 "5b8d0006-6f20-11e4-b116-123b93f75cba"
+CHAR_RELAY =             "5b8d0006-6f20-11e4-b116-123b93f75cba"
 
 CHAR_SET_TIME =          "96d20001-4bcf-11e5-885d-feff819cdc9f"
 CHAR_WRITE_SCHEDULE =    "96d20002-4bcf-11e5-885d-feff819cdc9f"
@@ -195,3 +195,4 @@ class Bluenet:
 			crc ^= (crc << 8 & 0xFFFF) << 4 & 0xFFFF
 			crc ^= ((crc & 0xFF) << 4 & 0xFFFF) << 1 & 0xFFFF
 		return crc
+
