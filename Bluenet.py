@@ -3,47 +3,118 @@ __author__ = 'Bart van Vliet'
 import math
 from ConversionUtils import *
 
-CHAR_TEMPERATURE =       "f5f90001-59f9-11e4-aa15-123b93f75cba"
-CHAR_RESET =             "f5f90005-59f9-11e4-aa15-123b93f75cba"
-CHAR_MESH_COMMAND =      "f5f90006-59f9-11e4-aa15-123b93f75cba"
-CHAR_CONFIG_WRITE =      "f5f90007-59f9-11e4-aa15-123b93f75cba"
-CHAR_CONFIG_SELECT =     "f5f90008-59f9-11e4-aa15-123b93f75cba"
-CHAR_CONFIG_READ =       "f5f90009-59f9-11e4-aa15-123b93f75cba"
+CHAR_CONTROL                       = "24f00001-7d10-4805-bfc1-7663a01c3bff"
+CHAR_MESH_CONTROL                  = "24f00002-7d10-4805-bfc1-7663a01c3bff"
+CHAR_CONFIG_CONTROL                = "24f00004-7d10-4805-bfc1-7663a01c3bff"
+CHAR_CONFIG_READ                   = "24f00005-7d10-4805-bfc1-7663a01c3bff"
+CHAR_STATE_CONTROL                 = "24f00006-7d10-4805-bfc1-7663a01c3bff"
+CHAR_STATE_READ                    = "24f00007-7d10-4805-bfc1-7663a01c3bff"
 
-CHAR_PWM =               "5b8d0001-6f20-11e4-b116-123b93f75cba"
-CHAR_SAMPLE_POWER =      "5b8d0002-6f20-11e4-b116-123b93f75cba"
-CHAR_READ_POWER_CURVE =  "5b8d0003-6f20-11e4-b116-123b93f75cba"
-CHAR_RELAY =             "5b8d0006-6f20-11e4-b116-123b93f75cba"
+CHAR_MAC_ADDRESS                   = "24f10002-7d10-4805-bfc1-7663a01c3bff"
 
-CHAR_SET_TIME =          "96d20001-4bcf-11e5-885d-feff819cdc9f"
-CHAR_WRITE_SCHEDULE =    "96d20002-4bcf-11e5-885d-feff819cdc9f"
-CHAR_LIST_SCHEDULE =     "96d20003-4bcf-11e5-885d-feff819cdc9f"
+CHAR_TEMPERATURE                   = "24f20001-7d10-4805-bfc1-7663a01c3bff"
+CHAR_RESET                         = "24f20002-7d10-4805-bfc1-7663a01c3bff"
 
-CHAR_DFU_CONTROL_POINT = "00001531-1212-efde-1523-785feabcd123"
-CHAR_DFU_PACKET =        "00001532-1212-efde-1523-785feabcd123"
-CHAR_DFU_VERION =        "00001534-1212-efde-1523-785feabcd123"
+CHAR_PWM                           = "24f30001-7d10-4805-bfc1-7663a01c3bff"
+CHAR_RELAY                         = "24f30002-7d10-4805-bfc1-7663a01c3bff"
+CHAR_POWER_SAMPLES                 = "24f30003-7d10-4805-bfc1-7663a01c3bff"
+CHAR_CURRENT_CONSUMPTION           = "24f30004-7d10-4805-bfc1-7663a01c3bff"
 
-CHAR_MESH_METADATA =     "2a1e0004-fd51-d882-8ba8-b98c0000cd1e"
-CHAR_MESH_VALUE =        "2a1e0005-fd51-d882-8ba8-b98c0000cd1e"
+CHAR_TRACKED_DEVICE                = "24f40001-7d10-4805-bfc1-7663a01c3bff"
+CHAR_TRACKED_DEVICE_LIST           = "24f40002-7d10-4805-bfc1-7663a01c3bff"
+CHAR_SCAN_DEVICE                   = "24f40003-7d10-4805-bfc1-7663a01c3bff"
+CHAR_LIST_DEVICE                   = "24f40004-7d10-4805-bfc1-7663a01c3bff"
+CHAR_RSSI                          = "24f40005-7d10-4805-bfc1-7663a01c3bff"
+
+CHAR_CURRENT_TIME                  = "24f50001-7d10-4805-bfc1-7663a01c3bff"
+CHAR_WRITE_SCHEDULE_ENTRY          = "24f50002-7d10-4805-bfc1-7663a01c3bff"
+CHAR_LIST_SCHEDULE_ENTRIES         = "24f50003-7d10-4805-bfc1-7663a01c3bff"
+
+CHAR_SUPPORTED_NEW_ALERT           = "24f60001-7d10-4805-bfc1-7663a01c3bff"
+CHAR_NEW_ALERT                     = "24f60002-7d10-4805-bfc1-7663a01c3bff"
+CHAR_SUPPORTED_UNREAD_ALERT        = "24f60003-7d10-4805-bfc1-7663a01c3bff"
+CHAR_UNREAD_ALERT                  = "24f60004-7d10-4805-bfc1-7663a01c3bff"
+CHAR_ALERT_CONTROL_POINT           = "24f60005-7d10-4805-bfc1-7663a01c3bff"
+
+CHAR_MESH_METADATA                 = "2a1e0004-fd51-d882-8ba8-b98c0000cd1e"
+CHAR_MESH_VALUE                    = "2a1e0005-fd51-d882-8ba8-b98c0000cd1e"
 
 RESET_CODE_RESET = 1
 RESET_CODE_DFU = 66
 
 class MeshHandleType:
-	HUB =  1
-	DATA = 2
+	HUB   = 1
+	DATA  = 2
 
 class MeshDataMessageType:
-	EVENT_MESSAGE =   0
-	POWER_MESSAGE =   1
-	BEACON_MESSAGE =  2
-	COMMAND_MESSAGE = 3
-	CONFIG_MESSAGE =  4
+	CONTROL_MESSAGE       = 0
+	BEACON_MESSAGE        = 1
+	CONFIG_MESSAGE        = 2
+	STATE_MESSAGE         = 3
+	SCAN_MESSAGE          = 101
+	POWER_SAMPLES_MESSAGE = 102
+	EVENT_MESSAGE         = 103
 
-class MeshCommandType:
-	SCAN_START = 1
+class CommandTypes:
+	CMD_SWITCH                      = 0  # 0x00
+	CMD_PWM                         = 1  # 0x01
+	CMD_SET_TIME                    = 2  # 0x02
+	CMD_GOTO_DFU                    = 3  # 0x03
+	CMD_RESET                       = 4  # 0x04
+	CMD_FACTORY_RESET               = 5  # 0x05
+	CMD_KEEP_ALIVE_STATE            = 6  # 0x06
+	CMD_KEEP_ALIVE                  = 7  # 0x07
+	CMD_ENABLE_MESH                 = 8  # 0x08
+	CMD_ENABLE_ENCRYPTION           = 9  # 0x09
+	CMD_ENABLE_IBEACON              = 10 # 0x0A
+	CMD_ENABLE_CONT_POWER_MEASURE   = 11 # 0x0B
+	CMD_ENABLE_SCANNER              = 12 # 0x0C
+	CMD_SCAN_DEVICES                = 13 # 0x0D
+	CMD_SAMPLE_POWER                = 14 # 0x0E
+	CMD_USER_FEEDBACK               = 15 # 0x0F
+	CMD_SCHEDULE_ENTRY              = 16 # 0x10
 
+class ConfigTypes:
+	CONFIG_NAME                             = 0  # 0x00
+	CONFIG_DEVICE_TYPE                      = 1  # 0x01
+	CONFIG_ROOM                             = 2  # 0x02
+	CONFIG_FLOOR                            = 3  # 0x03
+	CONFIG_NEARBY_TIMEOUT                   = 4  # 0x04
+	CONFIG_PWM_FREQ                         = 5  # 0x05
+	CONFIG_IBEACON_MAJOR                    = 6  # 0x06
+	CONFIG_IBEACON_MINOR                    = 7  # 0x07
+	CONFIG_IBEACON_UUID                     = 8  # 0x08
+	CONFIG_IBEACON_TXPOWER                  = 9  # 0x09
+	CONFIG_WIFI_SETTINGS                    = 10 # 0x0A
+	CONFIG_TX_POWER                         = 11 # 0x0B
+	CONFIG_ADV_INTERVAL                     = 12 # 0x0C
+	CONFIG_PASSKEY							= 13 # 0x0D
+	CONFIG_MIN_ENV_TEMP                     = 14 # 0x0E
+	CONFIG_MAX_ENV_TEMP                     = 15 # 0x0F
+	CONFIG_SCAN_DURATION                    = 16 # 0x10
+	CONFIG_SCAN_SEND_DELAY                  = 17 # 0x11
+	CONFIG_SCAN_BREAK_DURATION              = 18 # 0x12
+	CONFIG_BOOT_DELAY                       = 19 # 0x13
+	CONFIG_MAX_CHIP_TEMP                    = 20 # 0x14
+	CONFIG_SCAN_FILTER                      = 21 # 0x15
+	CONFIG_SCAN_FILTER_SEND_FRACTION        = 22 # 0x16
+	CONFIG_CURRENT_LIMIT                    = 23 # 0x17
+	CONFIG_MESH_ENABLED                     = 24 # 0x18
+	CONFIG_ENCRYPTION_ENABLED               = 25 # 0x19
+	CONFIG_IBEACON_ENABLED                  = 26 # 0x1A
+	CONFIG_SCANNER_ENABLED                  = 27 # 0x1B
+	CONFIG_CONT_POWER_SAMPLER_ENABLED       = 28 # 0x1C
+	CONFIG_TRACKER_ENABLED                  = 29 # 0x1D
+	CONFIG_ADC_SAMPLE_RATE                  = 30 # 0x1E
+	CONFIG_POWER_SAMPLE_BURST_INTERVAL      = 31 # 0x1F
+	CONFIG_POWER_SAMPLE_CONT_INTERVAL       = 32 # 0x20
+	CONFIG_POWER_SAMPLE_CONT_NUM_SAMPLES    = 33 # 0x21
+	CONFIG_CROWNSTONE_ID                    = 34 # 0x22
 
+class ValueOpCode:
+	READ_VALUE   = 0
+	WRITE_VALUE  = 1
+	NOTIFY_VALUE = 2
 
 class ScheduleTimeType:
 	TIME_REPEAT = 0

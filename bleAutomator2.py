@@ -2,6 +2,8 @@
 
 __author__ = 'Bart van Vliet'
 
+## TODO: TBU, NEEDS TO BE UPDATED
+
 import os, sys
 import pexpect
 import optparse

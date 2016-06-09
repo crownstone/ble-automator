@@ -14,7 +14,7 @@ if __name__ == '__main__':
 											\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4 -t 0 -d myCrown
 											Example:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4 -t 3 -d 2 -n''',
 									version='0.1')
-		
+
 		parser.add_option('-a', '--address',
 				action='store',
 				dest="address",
@@ -65,30 +65,28 @@ if __name__ == '__main__':
 				dest="viaMesh",
 				help='Write value over the mesh'
 				)
-		
+
 		options, args = parser.parse_args()
-	
+
 	except Exception, e:
 		print e
 		print "For help use --help"
 		sys.exit(2)
-	
+
 	if (not options.address or options.configType == None or options.configValue == None):
 		parser.print_help()
 		exit(2)
-	
+
 	ble = BleAutomator(options.interface, options.verbose)
-	
+
 	# Connect to peer device.
 	if (not ble.connect(options.address)):
 		exit(1)
-	
-	# First byte is the type
-	arr8 = [options.configType]
 
-	# Second byte is reserved for byte alignment
-	arr8.append(0)
-	
+	# First byte is the type
+	# Second byte is the opCode
+	arr8 = [options.configType, ValueOpCode.WRITE_VALUE]
+
 	data = []
 	if (options.as_number):
 		# Write value as number
@@ -130,13 +128,13 @@ if __name__ == '__main__':
 		meshArr8.extend(Conversion.uint16_to_uint8_array(MeshDataMessageType.CONFIG_MESSAGE))
 		meshArr8.extend(arr8)
 		print meshArr8
-		if (not ble.writeCharacteristic(CHAR_MESH, meshArr8)):
+		if (not ble.writeCharacteristic(CHAR_MESH_CONTROL, meshArr8)):
 			exit(1)
 	else:
-		if (not ble.writeCharacteristic(CHAR_CONFIG_WRITE, arr8)):
+		if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, arr8)):
 			exit(1)
-	
+
 	# Disconnect from peer device if not done already and clean up.
 	ble.disconnect()
-	
+
 	exit(0)

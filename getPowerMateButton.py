@@ -6,6 +6,7 @@ __author__ = 'Anne van Rossum'
 import os, sys, datetime
 from bleAutomator import *
 
+## TODO: TBU, NEEDS TO BE UPDATED
 
 charac='9cf53570-ddd9-47f3-ba63-09acefc60415'
 
@@ -64,5 +65,5 @@ if __name__ == '__main__':
 
 	# Disconnect from peer device if not done already and clean up.
 	ble.disconnect()
-	
+
 	exit(0)
