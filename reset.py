@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 __author__ = 'Bart van Vliet'
 
 
@@ -10,7 +9,7 @@ if __name__ == '__main__':
 	try:
 		parser = optparse.OptionParser(usage='%prog [-v] [-i <interface>] -a <ble address>\n\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4',
 									version='0.1')
-		
+
 		parser.add_option('-a', '--address',
 				action='store',
 				dest="address",
@@ -35,20 +34,20 @@ if __name__ == '__main__':
 				dest="dfu",
 				help="Reset and enter dfu mode."
 				)
-		
+
 		options, args = parser.parse_args()
-	
+
 	except Exception, e:
 		print e
 		print "For help use --help"
 		sys.exit(2)
-	
+
 	if (not options.address):
 		parser.print_help()
 		exit(2)
-	
+
 	ble = BleAutomator(options.interface, options.verbose)
-	
+
 	# Connect to peer device.
 	if (not ble.connect(options.address)):
 		exit(1)
@@ -61,8 +60,8 @@ if __name__ == '__main__':
 	# Write should fail, since we won't get a response
 	if (ble.writeCharacteristic(CHAR_RESET, [resetCode])):
 		exit(1)
-	
+
 	# Disconnect from peer device if not done already and clean up.
 	ble.disconnect()
-	
+
 	exit(0)

@@ -66,13 +66,15 @@ if __name__ == '__main__':
 		commandInt = 1
 
 	arr8 = [MeshHandleType.DATA, 0] # Handle
-	arr8.extend(Conversion.uint16_to_uint8_array(6+2+2+1)) # Length of target address + message type + command type + par
+	arr8.extend(Conversion.uint16_to_uint8_array(6+2+2+2+1)) # Length of target address + message type + command type + par
 	arr8.extend([0,0,0,0,0,0]) # target address: all 0 to target any node
 	arr8.extend(Conversion.uint16_to_uint8_array(MeshDataMessageType.COMMAND_MESSAGE))
-	arr8.extend(Conversion.uint16_to_uint8_array(MeshCommandType.SCAN_START))
+	arr8.extend(CommandTypes.CMD_ENABLE_SCANNER) # command
+	arr8.extend(0) # byte alignment
+	arr8.extend(Conversion.uint16_to_uint8_array(1)) # length
 	arr8.extend([commandInt])
 
-	if (not ble.writeCharacteristic(CHAR_MESH, arr8)):
+	if (not ble.writeCharacteristic(CHAR_MESH_CONTROL, arr8)):
 		exit(1)
 
 	# Disconnect from peer device if not done already and clean up.

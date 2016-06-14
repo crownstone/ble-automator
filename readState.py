@@ -35,10 +35,10 @@ if __name__ == '__main__':
 				)
 		parser.add_option('-t', '--type',
 				action='store',
-				dest="configType",
+				dest="stateType",
 				type="int",
 				default=None,
-				help='What configuration to read (integer)'
+				help='What state to read (integer)'
 				)
 		parser.add_option('-n', '--number',
 				action='store_true',
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 		print "For help use --help"
 		sys.exit(2)
 
-	if (not options.address or options.configType == None):
+	if (not options.address or options.stateType == None):
 		parser.print_help()
 		exit(2)
 
@@ -65,22 +65,22 @@ if __name__ == '__main__':
 
 	# Write type to select, first byte is the type, second byte is the
 	# opCode
-	arr8 = [options.configType, ValueOpCode.READ_VALUE]
+	arr8 = [options.stateType, ValueOpCode.READ_VALUE]
 
-	if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, arr8)):
+	if (not ble.writeCharacteristic(CHAR_STATE_CONTROL, arr8)):
 		exit(1)
 
 	time.sleep(1)
 
 	# Read the value of selected type
-	arr8 = ble.readCharacteristic(CHAR_CONFIG_READ)
+	arr8 = ble.readCharacteristic(CHAR_STATE_READ)
 	if (not arr8):
 		print "Couldn't read value"
 		exit(1)
 
 	# First byte is the type
 	print "Type: %i" % (arr8[0])
-	if (options.configType != arr8[0]):
+	if (options.stateType != arr8[0]):
 		print "Type mismatch"
 		exit(1)
 
