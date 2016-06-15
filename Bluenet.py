@@ -40,6 +40,10 @@ CHAR_ALERT_CONTROL_POINT           = "24f60005-7d10-4805-bfc1-7663a01c3bff"
 CHAR_MESH_METADATA                 = "2a1e0004-fd51-d882-8ba8-b98c0000cd1e"
 CHAR_MESH_VALUE                    = "2a1e0005-fd51-d882-8ba8-b98c0000cd1e"
 
+CHAR_DFU_CONTROL_POINT             = "00001531-1212-efde-1523-785feabcd123"
+CHAR_DFU_PACKET                    = "00001532-1212-efde-1523-785feabcd123"
+CHAR_DFU_VERION                    = "00001534-1212-efde-1523-785feabcd123"
+
 RESET_CODE_RESET = 1
 RESET_CODE_DFU = 66
 
