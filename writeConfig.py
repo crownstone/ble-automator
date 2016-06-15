@@ -46,6 +46,11 @@ if __name__ == '__main__':
 				dest="as_number",
 				help='Write value as number, not as string'
 				)
+		parser.add_option('-r', '--array',
+				action='store_true',
+				dest="as_array",
+				help='Write value as array, not as string'
+				)
 		parser.add_option('-d', '--data',
 				action='store',
 				dest="configValue",
@@ -101,6 +106,8 @@ if __name__ == '__main__':
 			data = Conversion.uint16_to_uint8_array(valInt)
 		else:
 			data = [valInt]
+	elif (options.as_array):
+		data = Conversion.hex_string_to_uint8_array(options.configValue)
 	else:
 		# Write value as string
 		data = Conversion.string_to_uint8_array(options.configValue)

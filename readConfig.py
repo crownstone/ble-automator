@@ -45,6 +45,11 @@ if __name__ == '__main__':
 				dest="as_number",
 				help='Read value as number, not as string'
 				)
+		parser.add_option('-r', '--array',
+				action='store_true',
+				dest="as_array",
+				help='Read value as array (hex), not as string'
+				)
 
 		options, args = parser.parse_args()
 
@@ -106,6 +111,9 @@ if __name__ == '__main__':
 			print "Value: %i" % (Conversion.uint8_array_to_uint32(data))
 		else:
 			print "Value:", list(data)
+	elif (options.as_array):
+		valStr = Conversion.uint8_array_to_hex_string(data)
+		print "Value: %s" %valStr
 	else:
 		valStr = Conversion.uint8_array_to_string(data)
 		print "Value: %s" % (valStr)
