@@ -1,6 +1,7 @@
 __author__ = 'Bart van Vliet'
 
 import binascii
+import struct
 
 class Conversion:
 
@@ -11,6 +12,19 @@ class Conversion:
 		if (res > 127):
 			res -= 256
 		return res
+
+	#######################################
+	# Conversions between uint8 and float #
+	#######################################
+	@staticmethod
+	def uint8_array_to_float(arr8):
+		""" Convert an array of 4 bytes to a float """
+		return struct.unpack('<f', bytearray(arr8))[0]
+
+	@staticmethod
+	def float_to_uint8_array(val):
+		""" Convert a float to an array of 4 bytes """
+		return bytearray(struct.pack('<f', val))
 
 	########################################
 	# Conversions between uint8 and uint16 #
