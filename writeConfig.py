@@ -6,6 +6,7 @@ __author__ = 'Bart van Vliet'
 from bleAutomator2 import *
 from ConversionUtils import *
 from Bluenet import *
+import struct
 
 
 if __name__ == '__main__':
@@ -45,6 +46,11 @@ if __name__ == '__main__':
 				action='store_true',
 				dest="as_number",
 				help='Write value as number, not as string'
+				)
+		parser.add_option('-f', '--float',
+				action='store_true',
+				dest="as_float",
+				help='Read value as float, not as string'
 				)
 		parser.add_option('-r', '--array',
 				action='store_true',
@@ -108,6 +114,9 @@ if __name__ == '__main__':
 			data = [valInt]
 	elif (options.as_array):
 		data = Conversion.hex_string_to_uint8_array(options.configValue)
+	elif (options.as_float):
+		valFloat = float(options.configValue)
+		data = Conversion.float_to_uint8_array(valFloat)
 	else:
 		# Write value as string
 		data = Conversion.string_to_uint8_array(options.configValue)
@@ -140,6 +149,8 @@ if __name__ == '__main__':
 			exit(1)
 			exit(1)
 	else:
+		if (options.verbose):
+				print "Write", arr8
 		if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, arr8)):
 			print "failed to write to CHAR_CONFIG_CONTROL"
 			exit(1)

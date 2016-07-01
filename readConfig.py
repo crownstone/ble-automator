@@ -6,6 +6,7 @@ __author__ = 'Bart van Vliet'
 from bleAutomator2 import *
 from ConversionUtils import *
 from Bluenet import *
+import struct
 
 
 if __name__ == '__main__':
@@ -44,6 +45,11 @@ if __name__ == '__main__':
 				action='store_true',
 				dest="as_number",
 				help='Read value as number, not as string'
+				)
+		parser.add_option('-f', '--float',
+				action='store_true',
+				dest="as_float",
+				help='Read value as float, not as string'
 				)
 		parser.add_option('-r', '--array',
 				action='store_true',
@@ -114,6 +120,12 @@ if __name__ == '__main__':
 	elif (options.as_array):
 		valStr = Conversion.uint8_array_to_hex_string(data)
 		print "Value: %s" %valStr
+	elif (options.as_float):
+		# valStr = '{0:032b}'.format(Conversion.uint8_array_to_uint32(data))
+		# val = (data[0] << 24) + (data[1] << 16) + (data[2] << 8) + data[3]
+		# valStr = '{0:032b}'.format(val)
+		# print "Value: %s" %valStr
+		print "Float:", Conversion.uint8_array_to_float(data)
 	else:
 		valStr = Conversion.uint8_array_to_string(data)
 		print "Value: %s" % (valStr)
