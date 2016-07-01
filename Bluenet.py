@@ -10,8 +10,10 @@ CHAR_CONFIG_READ                   = "24f00005-7d10-4805-bfc1-7663a01c3bff"
 CHAR_STATE_CONTROL                 = "24f00006-7d10-4805-bfc1-7663a01c3bff"
 CHAR_STATE_READ                    = "24f00007-7d10-4805-bfc1-7663a01c3bff"
 
-CHAR_SETUP_CONTROL                 = "24f10002-7d10-4805-bfc1-7663a01c3bff"
+CHAR_SETUP_CONTROL                 = "24f10001-7d10-4805-bfc1-7663a01c3bff"
 CHAR_MAC_ADDRESS                   = "24f10002-7d10-4805-bfc1-7663a01c3bff"
+CHAR_SETUP_CONFIG_CONTROL          = "24f10004-7d10-4805-bfc1-7663a01c3bff"
+CHAR_SETUP_CONFIG_READ             = "24f10005-7d10-4805-bfc1-7663a01c3bff"
 
 CHAR_TEMPERATURE                   = "24f20001-7d10-4805-bfc1-7663a01c3bff"
 CHAR_RESET                         = "24f20002-7d10-4805-bfc1-7663a01c3bff"

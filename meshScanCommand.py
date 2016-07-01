@@ -38,6 +38,17 @@ if __name__ == '__main__':
 				default=None,
 				help='Command to set (0=stop, 1=start)'
 				)
+		parser.add_option('-b', '--broadcast',
+				action='store_true',
+				dest="broadcast"
+				)
+		parser.add_option('-t', '--target',
+				action='store',
+				dest="target",
+				type="string",
+				default=None,
+				help='target crownstone id'
+				)
 
 		options, args = parser.parse_args()
 
@@ -66,15 +77,39 @@ if __name__ == '__main__':
 		commandInt = 1
 
 	arr8 = [MeshHandleType.DATA, 0] # Handle
+	# arr8.extend(Conversion.uint16_to_uint8_array(6+2+2+2+1)) # Length of target address + message type + command type + par
 	arr8.extend(Conversion.uint16_to_uint8_array(6+2+2+2+1)) # Length of target address + message type + command type + par
-	arr8.extend([0,0,0,0,0,0]) # target address: all 0 to target any node
-	arr8.extend(Conversion.uint16_to_uint8_array(MeshDataMessageType.COMMAND_MESSAGE))
-	arr8.extend(CommandTypes.CMD_ENABLE_SCANNER) # command
-	arr8.extend(0) # byte alignment
+	# arr8.extend([0,0,0,0,0,0]) # target address: all 0 to target any node
+	# arr8.extend(Conversion.hex_string_to_uint8_array("4b2598b4efe6")) # target address: all 0 to target any node
+
+	if (options.broadcast):
+		arr8.extend(Conversion.uint16_to_uint8_array(0)) # target address: all 0 to target any node
+
+		# empty for reason and user id
+		arr8.extend([0,0,0,0])
+	else:
+		if (not options.target):
+			print "need to provide target crownstone id. use -b for broadcast instead"
+			exit(1)
+
+		if (len(options.target) == 12):
+			target = Conversion.hex_string_to_uint8_array(options.target)
+			arr8.extend(target) # target address: all 0 to target any node
+		else:
+			target = Conversion.uint16_to_uint8_array(int(options.target))
+			arr8.extend(target) # target address: all 0 to target any node
+
+			# empty for reason and user id
+			arr8.extend([0,0,0,0])
+
+	arr8.extend(Conversion.uint16_to_uint8_array(MeshDataMessageType.CONTROL_MESSAGE))
+	arr8.extend([CommandTypes.CMD_ENABLE_SCANNER]) # command
+	arr8.extend([0]) # byte alignment
 	arr8.extend(Conversion.uint16_to_uint8_array(1)) # length
 	arr8.extend([commandInt])
 
 	if (not ble.writeCharacteristic(CHAR_MESH_CONTROL, arr8)):
+		print "failed to write to characteristic"
 		exit(1)
 
 	# Disconnect from peer device if not done already and clean up.

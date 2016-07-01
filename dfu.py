@@ -87,14 +87,28 @@ class BleDfuUploader(object):
 		resetHandle = self.ble.getHandle(CHAR_RESET)
 
 		if not resetHandle:
-			# maybe it already is IN DFU mode
-			ctrlptHandle = self.ble.getHandle(CHAR_DFU_CONTROL_POINT)
-			if not ctrlptHandle:
-				self.log.e("Not in DFU, nor has the toggle characteristic, aborting..")
-				return False
+
+			controlHandle = self.ble.getHandle(CHAR_CONTROL)
+
+			if not controlHandle:
+
+				# maybe it already is IN DFU mode
+				ctrlptHandle = self.ble.getHandle(CHAR_DFU_CONTROL_POINT)
+				if not ctrlptHandle:
+					self.log.e("Not in DFU, nor has the toggle characteristic, aborting..")
+					return False
+				else:
+					self.log.i("Node is in DFU mode", logging.LogType.SUCCESS)
+					return True
+
 			else:
-				self.log.i("Node is in DFU mode", logging.LogType.SUCCESS)
-				return True
+				if (self.enableDfuAttemptNum >= 3):
+					self.log.e("Stopped trying to enable DFU after 3 attempts")
+					return False
+				self.enableDfuAttemptNum += 1
+				self.log.i("Switching device into DFU mode")
+				self.ble.writeCharacteristic(CHAR_CONTROL, [CommandTypes.CMD_GOTO_DFU, 0])
+				time.sleep(0.2)
 
 		else:
 			if (self.enableDfuAttemptNum >= 3):
@@ -105,17 +119,22 @@ class BleDfuUploader(object):
 			self.ble.writeCharacteristic(CHAR_RESET, [RESET_CODE_DFU])
 			time.sleep(0.2)
 
-			self.log.i("Node is being restarted")
-			self.ble.disconnect()
+		self.log.i("Node is being restarted")
+		self.ble.disconnect()
 
-			# wait for restart
-			time.sleep(5)
+		# wait for restart
+		time.sleep(5)
 
-			# reconnect
-			self.log.i("Reconnecting...")
-			if not (self.connect()):
-				return False
-			return self._checkDfuMode()
+		# reconnect
+		self.log.i("Reconnecting...")
+		retry = 0
+		while (retry < 3):
+			if (self.connect()):
+				return self._checkDfuMode()
+			else:
+				retry += 1
+				print self.log.i("retry %i ..." %retry)
+		return False
 
 	def _sendOpcode(self, opcode, extra=None):
 		res = False
@@ -323,13 +342,34 @@ if __name__ == '__main__':
 	ble_dfu = BleDfuUploader(options.address.upper(), options.hex_file, options.interface, log, imageType)
 
 	# Connect to peer device.
-	ble_dfu.connect()
+	if not ble_dfu.connect():
+		ble_dfu.log.e("Connect failed");
+		exit(1)
 
 	# Transmit the hex image to peer device.
-	ble_dfu.update()
+	if not ble_dfu.update():
+		ble_dfu.log.e("Update failed");
+		exit(1)
 
 	# wait a second to be able to recieve the disconnect event from peer device.
 	time.sleep(1)
 
 	# Disconnect from peer device if not done already and clean up.
 	ble_dfu.disconnect()
+
+	if (not options.bootloader):
+		time.sleep(5)
+
+		ble_dfu.log.d("Reconnecting to device to verify firmware.", logging.LogType.SUCCESS)
+
+		if (ble_dfu.connect() and (ble_dfu.ble.getHandle(CHAR_RESET) or ble_dfu.ble.getHandle(CHAR_CONTROL))):
+
+			time.sleep(1)
+
+			ble_dfu.log.d("Success!!", logging.LogType.SUCCESS)
+
+			ble_dfu.disconnect()
+
+		else:
+
+			ble_dfu.log.e("Failure!!")

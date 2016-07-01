@@ -138,10 +138,9 @@ if __name__ == '__main__':
 		if (not ble.writeCharacteristic(CHAR_MESH_CONTROL, meshArr8)):
 			print "failed to write to CHAR_MESH_CONTROL"
 			exit(1)
-			exit(1)
 	else:
-		if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, arr8)):
-			print "failed to write to CHAR_CONFIG_CONTROL"
+		if (not ble.writeCharacteristic(CHAR_STATE_CONTROL, arr8)):
+			print "failed to write to CHAR_STATE_CONTROL"
 			exit(1)
 
 	# Disconnect from peer device if not done already and clean up.
