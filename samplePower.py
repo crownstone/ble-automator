@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
 	time.sleep(1)
 
-	curve = ble.readCharacteristic(CHAR_READ_POWER_CURVE)
+	curve = ble.readCharacteristic(CHAR_POWER_SAMPLES)
 	if (not curve):
 		exit(1)
 

@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
 	time.sleep(0.5)
 
-	arr8 = ble.readCharacteristic(CHAR_READ_POWER_CURVE)
+	arr8 = ble.readCharacteristic(CHAR_POWER_SAMPLES)
 	if (not arr8):
 		exit(1)
 

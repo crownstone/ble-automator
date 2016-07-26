@@ -5,12 +5,31 @@ import struct
 
 class Conversion:
 
+	####################################
+	# Conversions between uint and int #
+	####################################
 	@staticmethod
 	def uint8_to_int8(byte):
 		"""	Convert a unsigned byte to a signed byte """
 		res = byte
 		if (res > 127):
 			res -= 256
+		return res
+
+	@staticmethod
+	def uint16_to_int16(val):
+		""" Convert an uint16 to a int16 """
+		res = val
+		if (res > 32767):
+			res -= 65536
+		return res
+
+	@staticmethod
+	def uint32_to_int32(val):
+		""" Convert an uint32 to a int32 """
+		res = val
+		if (res > 2147483647):
+			res -= 4294967296
 		return res
 
 	#######################################

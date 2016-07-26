@@ -267,6 +267,20 @@ class Bluenet:
 
 		return res
 
+	@staticmethod
+	def getPowerCurveFromNotification(arr8):
+		size = arr8[0]
+		if (len(arr8) != 1+9*2+1):
+			return
+		res = Conversion.uint8_array_to_uint16_array(arr8[1:size*2+1])
+		checksum = 0
+		for val in res:
+			checksum = (checksum+val) % 256
+		if (checksum != arr8[-1]):
+			print "Warning: checksum mismatch!"
+			print list(arr8)
+		return res
+
 	# Copied implementation of nordic
 	@staticmethod
 	def crc16_ccitt(arr8, length):
