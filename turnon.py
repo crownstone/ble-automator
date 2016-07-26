@@ -9,7 +9,7 @@ from Bluenet import *
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(usage='%prog [-vr] [-i <interface>] -a <ble address>\n\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4',
+		parser = optparse.OptionParser(usage='%prog [-vp] [-i <interface>] -a <ble address>\n\nExample:\n\t%prog -i hci0 -a CD:E3:4A:47:1C:E4',
 									version='0.1')
 		
 		parser.add_option('-a', '--address',
@@ -31,10 +31,10 @@ if __name__ == '__main__':
 				dest="verbose",
 				help='Be verbose.'
 				)
-		parser.add_option('-r', '--relay',
+		parser.add_option('-p', '--pwm',
 				action='store_true',
-				dest="relay",
-				help='Use relay to switch.'
+				dest="pwm",
+				help='Use pwm (IGBTs) to switch.'
 				)
 
 		options, args = parser.parse_args()
@@ -54,9 +54,9 @@ if __name__ == '__main__':
 	if (not ble.connect(options.address)):
 		exit(1)
 
-	characteristic = CHAR_PWM
-	if (options.relay):
-		characteristic = CHAR_RELAY
+	characteristic = CHAR_RELAY
+	if (options.pwm):
+		characteristic = CHAR_PWM
 
 	# Write 255 to switch on the power
 	if (not ble.writeCharacteristic(characteristic, [255])):
