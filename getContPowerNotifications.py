@@ -10,7 +10,7 @@ import datetime
 
 if __name__ == '__main__':
 	try:
-		parser = optparse.OptionParser(usage="%prog [-v] [-i <interface>] [-a <address>] [-f <output file>] \n\nExample:\n\t%prog -i hci0 -a 01:23:45:67:89:AB",
+		parser = optparse.OptionParser(usage="%prog [-vm] [-i <interface>] [-a <address>] [-f <output file>] \n\nExample:\n\t%prog -i hci0 -a 01:23:45:67:89:AB",
 									version="0.1")
 
 		parser.add_option('-i', '--interface',
@@ -24,6 +24,11 @@ if __name__ == '__main__':
 				action="store_true",
 				dest="verbose",
 				help="Be verbose."
+				)
+		parser.add_option('-m', '--mesh',
+				action="store_true",
+				dest="mesh",
+				help="Read via mesh characteristic."
 				)
 		parser.add_option('-a', '--address',
 				action="store",
@@ -58,8 +63,9 @@ if __name__ == '__main__':
 		exit(1)
 
 	# Subscribe for notifications
-	# handle = ble.getHandle(CHAR_READ_POWER_CURVE) + 2
-	handle = ble.getHandle(CHAR_MESH_VALUE) + 1
+	handle = ble.getHandle(CHAR_POWER_SAMPLES) + 2
+	if (options.mesh):
+		handle = ble.getHandle(CHAR_MESH_VALUE) + 1
 	if (not ble.writeCharacteristicHandle(handle, Conversion.uint16_to_uint8_array(1))):
 		exit(1)
 	# print "subscribed for notifications"
