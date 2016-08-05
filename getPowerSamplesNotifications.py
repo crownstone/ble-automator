@@ -5,7 +5,8 @@ __author__ = 'Bart van Vliet'
 from bleAutomator2 import *
 #import matplotlib.pyplot as plt
 from Bluenet import *
-
+import time
+import datetime
 
 if __name__ == '__main__':
 	try:
@@ -54,19 +55,36 @@ if __name__ == '__main__':
 	if (not ble.writeCharacteristicHandle(handle, Conversion.uint16_to_uint8_array(1))):
 		exit(1)
 
+	dataPacket = []
 	while True:
 		notification = ble.waitForNotification(1.0)
 		if (notification):
-			curve = Bluenet.getPowerCurveFromNotification(notification["data"])
+			#curve = Bluenet.getPowerCurveFromNotification(notification["data"])
 			# print "Notification on handle", notification["handle"]
-			#print list(notification["data"])
-			print curve
+			arr = notification["data"]
+			# print list(arr)
+			opCode = arr[0]
+			if (opCode == 0): # First part of the packet
+				startTime = time.time()
+				dataPacket = []
 
+			dataPacket.extend(arr[1:])
+			if (opCode == 255): # Last part of the packet
+				print "Read", len(dataPacket), "B in", time.time()-startTime, "s"
+
+				line = str(time.time())
+				line += " " + options.address
+				line += " " + str(datetime.datetime.now())
+				line += " " + " ".join(str(x) for x in dataPacket)
+				print line
 
 	# ble.disconnect()
+
 
 	# plt.plot(curve["currentTimestamps"], curve["currentSamples"])
 	# plt.plot(curve["voltageTimestamps"], curve["voltageSamples"])
 	# plt.show()
+
+
 
 	exit(0)

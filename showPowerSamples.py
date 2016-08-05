@@ -356,7 +356,7 @@ if __name__ == '__main__':
 
 
 
-	fig, axes = plt.subplots(nrows=3, sharex=True)
+	fig, axes = plt.subplots(nrows=2, sharex=True)
 	# for i in range(0, len(currentSamplesAll)):
 	axes[0].plot(currentTimestampsAll, currentSamplesAll, "o", label="current")
 	axes[1].plot(voltageTimestampsAll, voltageSamplesAll, "o", label="voltage")
@@ -365,11 +365,14 @@ if __name__ == '__main__':
 	# axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["min"], "o", label="min")
 	# axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["mean"], "o", label="mean")
 	# axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["max"], "o", label="max")
-	axes[2].plot(voltageTimeBetweenZeroes["time"], np.array(voltageTimeBetweenZeroes["val"]) / 32.7680, "o", label="time between zero crossings")
+#	axes[2].plot(voltageTimeBetweenZeroes["time"], np.array(voltageTimeBetweenZeroes["val"]) / 32.7680, "o", label="time between zero crossings")
 	axes[0].set_title(options.data_file)
 
 #	axes[3].plot(voltageTimeBetweenTops["time"], np.array(voltageTimeBetweenTops["val"]) / 32.7680, "o", label="time between tops")
 #	axes[2].plot(voltageDiffAll["time"], voltageDiffAll["val"], "o", label="voltage diff")
+
+	plt.show()
+	exit(0)
 
 	plt.figure()
 	plt.plot(range(0, len(voltageMinMeanMax["min"])), voltageMinMeanMax["min"], label="Vmin")
