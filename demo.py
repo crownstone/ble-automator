@@ -153,7 +153,7 @@ while True:
 
 	for i in range(0, 4):
 		axesGraphs[i].cla()
-		axesGraphs[i].plot(range(0, len(data[targets[i]]["power"])), data[targets[i]]["power"], label="power")
+		#axesGraphs[i].plot(range(0, len(data[targets[i]]["power"])), data[targets[i]]["power"], label="power")
 		axesGraphs[i].plot(range(0, len(data[targets[i]]["powerMovingAvg"])), data[targets[i]]["powerMovingAvg"], label="powerMovingAvg")
 		# axesGraphs[i].plot(range(0, len(data[targets[i]]["rssi"])), data[targets[i]]["rssi"], label="rssi")
 #		axesGraphs[i].plot(range(0, len(data[targets[i]]["switch"])), np.array(data[targets[i]]["switch"])*10, label="switch")
