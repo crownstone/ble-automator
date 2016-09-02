@@ -48,3 +48,13 @@ sudo apt-get install bluez python-pip
 sudo pip install pexpect
 sudo pip install intelhex --allow-unverified intelhex
 ```
+
+======================================
+
+## Create .zip file for Nordic app
+
+The following will create a .zip file with a .bin binary, a Manifest file and a .dat file.
+
+	python dfGenPkg.py -a crownstone.hex
+
+This used to create a .zip file with a .hex file, but that doesn't play well with DFU version 0.8.
