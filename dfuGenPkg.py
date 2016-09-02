@@ -15,10 +15,11 @@ import shutil
 import struct
 import json
 import copy
+from os.path import basename
 
 manifestTemplate = {
     "manifest": {
-        "dfu_version": 0.5
+        "dfu_version": 0.8
     }
 }
 
@@ -37,12 +38,18 @@ deviceTemplate = {
 def hexFileToArr(filename):
 	ih = IntelHex(filename)
 	buf = ih.tobinarray()
+        log.d("End and start of the binary: " + str(ih._get_start_end()))
 	return buf
 
 def crcFromHex(filename):
 	buf = hexFileToArr(filename)
-	crc = Bluenet.crc16_ccitt(buf, len(buf))
-	# print hex(crc)
+        len_buf = len(buf)
+        barename = os.path.splitext(basename(filename))[0]
+        log.d("Total length: " + str(len_buf) + " (check with size " + barename + ".bin on the commandline and resulting zip file)")
+	crc = Bluenet.crc16_ccitt(buf, len_buf)
+        crc_hex_st = hex(crc)
+        crc_int_st = str(int(crc_hex_st, 16))
+        log.d("Calculated crc16_ccitt: " + crc_hex_st + "(hex) or " + crc_int_st + " (dec)")
 	return crc
 
 def verifyFile(filename):
@@ -57,12 +64,21 @@ def verifyFile(filename):
 		exit(2)
 
 def createDatFile(name, crc, sd_req):
+        log.i("Create .dat file")
 	buf = struct.pack('<IHHHHH', 0xffffffff, 0xffff, 0xffff, 1, int(sd_req, 16), crc)
 	file = open('tmp/%s.dat' %name, 'wb')
 	file.write(buf)
 	file.close()
 
+def createBinFile(name):
+#        bname = basename(name);
+	buf = hexFileToArr(name + '.hex')
+        file = open('tmp/%s.bin' %name, 'wb')
+        file.write(buf)
+        file.close()
+
 def createApplicationDFU(filename, sd_req):
+        log.i("Create application dfu file")
 	createDFU("application", filename, sd_req)
 
 def createDFU(type, filename, sd_req):
@@ -71,6 +87,7 @@ def createDFU(type, filename, sd_req):
 	path, nameExt = os.path.split(filename)
 	name, ext = os.path.splitext(nameExt)
 
+        log.i("Create tmp directory")
 	os.mkdir('tmp')
 	try:
 		# os.chdir('tmp')
@@ -79,17 +96,21 @@ def createDFU(type, filename, sd_req):
 
 		createManifest(type, name, crc, sd_req)
 
-		shutil.copyfile(filename, 'tmp/' + nameExt)
+                createBinFile(name)
+		#shutil.copyfile(filename, 'tmp/' + nameExt)
 
 		# os.chdir('..')
+                log.i("Create " + type + ".zip file") 
 		shutil.make_archive(type, 'zip', 'tmp')
 	finally:
+                log.i("Remove tmp directory, recursively")
 		shutil.rmtree('tmp')
 
 def createManifest(type, name, crc, sd_req):
+        log.i("Create manifest")
 	manifest = copy.deepcopy(manifestTemplate)
 	device = copy.deepcopy(deviceTemplate)
-	device["bin_file"] = '%s.hex' %name
+	device["bin_file"] = '%s.bin' %name
 	device["dat_file"] = '%s.dat' %name
 	device["init_packet_data"]["firmware_crc16"] = crc
 	device["init_packet_data"]["softdevice_req"].append(int(sd_req, 16))
@@ -109,7 +130,7 @@ if __name__ == '__main__':
 
 	print os.getcwd()
 
-	log = logging.Logger(logging.LogLevel.INFO)
+	log = logging.Logger(logging.LogLevel.DEBUG)
 	try:
 		parser = optparse.OptionParser(usage='%prog -a <application_hex> -b <bootloader_hex> -s <softdevice_hex> -r <required_softdevice>\n\nExample:\n\t%prog.py -a crownstone.hex',
 									   version='0.1')
