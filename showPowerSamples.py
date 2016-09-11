@@ -94,7 +94,8 @@ if __name__ == '__main__':
 			address = words[1]
 
 			powerSamplesStruct = list(int(x) for x in words[4:])
-			if (len(powerSamplesStruct) < 502):
+			# if (len(powerSamplesStruct) < 502):
+			if (len(powerSamplesStruct) < 472):
 				continue
 
 			ind = 0
@@ -105,7 +106,7 @@ if __name__ == '__main__':
 				continue
 			currents = Conversion.uint8_array_to_uint16_array(powerSamplesStruct[ind:ind + currentSamplesLength * 2])
 			ind += currentSamplesLength*2
-			# print currentSamples
+			# print currents
 
 			voltageSamplesLength = Conversion.uint8_array_to_uint16(powerSamplesStruct[ind:ind+2])
 			ind += 2
@@ -114,7 +115,7 @@ if __name__ == '__main__':
 				continue
 			voltages = Conversion.uint8_array_to_uint16_array(powerSamplesStruct[ind:ind + voltageSamplesLength * 2])
 			ind += voltageSamplesLength*2
-			# print voltageSamples
+			# print voltages
 
 			currentTimestampsLength = Conversion.uint8_array_to_uint16(powerSamplesStruct[ind:ind+2])
 			ind += 2
