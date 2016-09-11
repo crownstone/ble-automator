@@ -51,8 +51,9 @@ if __name__ == '__main__':
 		exit(1)
 
 	# Subscribe for notifications
-	handle = ble.getHandle(CHAR_POWER_SAMPLES) + 2
+	handle = ble.getHandle(CHAR_POWER_SAMPLES) + 1
 	if (not ble.writeCharacteristicHandle(handle, Conversion.uint16_to_uint8_array(1))):
+		print "Could not subscribe for notifications"
 		exit(1)
 
 	dataPacket = []
