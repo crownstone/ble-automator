@@ -2,6 +2,9 @@ __author__ = 'Bart van Vliet'
 
 import math
 from ConversionUtils import *
+from Crypto.Cipher import AES
+# from Crypto.Util import Counter
+import Crypto.Random
 
 CHAR_CONTROL                       = "24f00001-7d10-4805-bfc1-7663a01c3bff"
 CHAR_MESH_CONTROL                  = "24f00002-7d10-4805-bfc1-7663a01c3bff"
@@ -9,11 +12,15 @@ CHAR_CONFIG_CONTROL                = "24f00004-7d10-4805-bfc1-7663a01c3bff"
 CHAR_CONFIG_READ                   = "24f00005-7d10-4805-bfc1-7663a01c3bff"
 CHAR_STATE_CONTROL                 = "24f00006-7d10-4805-bfc1-7663a01c3bff"
 CHAR_STATE_READ                    = "24f00007-7d10-4805-bfc1-7663a01c3bff"
+CHAR_SESSION_NONCE                 = "24f00008-7d10-4805-bfc1-7663a01c3bff"
+CHAR_RECOVERY                      = "24f00009-7d10-4805-bfc1-7663a01c3bff"
 
 CHAR_SETUP_CONTROL                 = "24f10001-7d10-4805-bfc1-7663a01c3bff"
 CHAR_MAC_ADDRESS                   = "24f10002-7d10-4805-bfc1-7663a01c3bff"
+CHAR_SETUP_KEY                     = "24f10003-7d10-4805-bfc1-7663a01c3bff"
 CHAR_SETUP_CONFIG_CONTROL          = "24f10004-7d10-4805-bfc1-7663a01c3bff"
 CHAR_SETUP_CONFIG_READ             = "24f10005-7d10-4805-bfc1-7663a01c3bff"
+CHAR_SETUP_SESSION_NONCE           = "24f10008-7d10-4805-bfc1-7663a01c3bff"
 
 CHAR_TEMPERATURE                   = "24f20001-7d10-4805-bfc1-7663a01c3bff"
 CHAR_RESET                         = "24f20002-7d10-4805-bfc1-7663a01c3bff"
@@ -153,6 +160,20 @@ class ScheduleDaily:
 	THURSDAYS   = 5
 	FRIDAYS     = 6
 	SATURDAYS   = 7
+
+class EncryptionAccessLevel:
+	ADMIN               = 0
+	MEMBER              = 1
+	GUEST               = 2
+	SETUP               = 100
+	NOT_SET             = 201
+	ENCRYPTION_DISABLED = 255
+
+class EncryptionType:
+	CTR                = 0
+	CTR_CAFEBABE       = 1
+	ECB_GUEST          = 2
+	ECB_GUEST_CAFEBABE = 3
 
 class Bluenet:
 	@staticmethod
@@ -298,3 +319,56 @@ class Bluenet:
 			crc ^= ((crc & 0xFF) << 4 & 0xFFFF) << 1 & 0xFFFF
 		return crc
 
+	@staticmethod
+	def encryptCtr(payloadData, sessionNonce, validationKey, key, accessLevel, ):
+		print "sessionNonce:", list(sessionNonce)
+		if (len(sessionNonce) is not 5):
+			print "Session nonce should be a bytearray of size 5"
+			return None
+
+		if (len(validationKey) is not 4):
+			print "Validation key should be a bytearray of size 4"
+			return None
+
+		if (len(key) is not 16):
+			print "Key should be a bytearray of size 16"
+			return None
+
+
+
+		packetNonce = bytearray(Crypto.Random.get_random_bytes(3))
+		print "packetNonce:", list(packetNonce)
+
+		payload = validationKey
+		payload.extend(payloadData)
+		# Zero pad until a multiple of 16
+		payload.extend([0] * ((16-(len(payload)%16))%16))
+		print "payload:", list(payload)
+
+		# TODO: use AES.MODE_CTR instead of implementing it ourselves?
+		# counter = Counter.new(128, little_endian=True, initial_value=0)
+		# counter = Counter.new(128, little_endian=False, initial_value=0)
+		# cipher = AES.new(str(key), AES.MODE_CTR, counter=counter)
+
+		cipher = AES.new(str(key), AES.MODE_ECB)
+		encryptedPayload = bytearray()
+		iv = bytearray(packetNonce) # Make sure we have a copy
+		iv.extend(sessionNonce)
+		for ctr in range(0, int(len(payload) / 16)):
+#			iv.extend([0]*4)
+#			iv.extend(Conversion.uint32_to_uint8_array(ctr))
+			# Concat with 8 byte counter, but we actually only use the last byte
+			# since we never go any further than 255 blocks
+			iv.extend([0]*7)
+			iv.extend([ctr])
+			print "iv:", list(iv)
+			encryptedIv = bytearray(cipher.encrypt(str(iv)))
+			# xor the data with the encrypted iv
+			for i in range(0,16):
+				encryptedPayload.append(encryptedIv[i] ^ payload[i])
+
+		arr8 = bytearray(packetNonce) # Make sure we have a copy
+		arr8.extend(accessLevel)
+		arr8.extend(encryptedPayload)
+
+		return arr8
