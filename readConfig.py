@@ -79,6 +79,7 @@ if __name__ == '__main__':
 	arr8 = [options.configType, ValueOpCode.READ_VALUE]
 
 	if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, arr8)):
+		print "Characteristic not found"
 		exit(1)
 
 	time.sleep(1)

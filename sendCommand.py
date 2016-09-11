@@ -170,9 +170,11 @@ if __name__ == '__main__':
 		meshArr8.extend(arr8)
 		print meshArr8
 		if (not ble.writeCharacteristic(CHAR_MESH_CONTROL, meshArr8)):
+			print "Characteristic not found"
 			exit(1)
 	else:
 		if (not ble.writeCharacteristic(CHAR_CONTROL, arr8)):
+			print "Characteristic not found"
 			exit(1)
 
 	# Disconnect from peer device if not done already and clean up.

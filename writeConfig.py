@@ -147,7 +147,6 @@ if __name__ == '__main__':
 		if (not ble.writeCharacteristic(CHAR_MESH_CONTROL, meshArr8)):
 			print "failed to write to CHAR_MESH_CONTROL"
 			exit(1)
-			exit(1)
 	else:
 		if (options.verbose):
 				print "Write", arr8
