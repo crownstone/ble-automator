@@ -52,7 +52,9 @@ if __name__ == '__main__':
 	if (not ble.connect(options.address)):
 		exit(1)
 
-	# Make the crownstone sample the current, give it some time to sample
+	########################################
+	# Get session nonce and validation key #
+	########################################
 	arr8 = ble.readCharacteristic(CHAR_SETUP_SESSION_NONCE)
 	if (not arr8):
 		print "Couldn't read session nonce"
@@ -64,31 +66,100 @@ if __name__ == '__main__':
 	print "Validation key:", list(validationKey)
 
 
+	################################
+	# Get encryption key for setup #
+	################################
 	arr8 = ble.readCharacteristic(CHAR_SETUP_KEY)
 	if (not arr8):
 		print "Couldn't read session key"
 		exit(1)
-
 	sessionKey = arr8
 	print "Session key:", list(sessionKey)
 
-	accessLevel = [EncryptionAccessLevel.SETUP]
-	print "accessLevel:", accessLevel
 
-	crownstoneID = 7357
-	data = Conversion.uint16_to_uint8_array(crownstoneID)
-	dataSize = len(data)
-	payloadData = [ConfigTypes.CONFIG_CROWNSTONE_ID, ValueOpCode.WRITE_VALUE]
-	payloadData.extend(Conversion.uint16_to_uint8_array(dataSize))
-	payloadData.extend(data)
-	print "Payload data:", payloadData
+	#######################
+	# Write Crownstone ID #
+	#######################
+	# crownstoneID = 7357
+	# data = Conversion.uint16_to_uint8_array(crownstoneID)
+	# dataSize = len(data)
+	# payloadData = [ConfigTypes.CONFIG_CROWNSTONE_ID, ValueOpCode.WRITE_VALUE]
+	# payloadData.extend(Conversion.uint16_to_uint8_array(dataSize))
+	# payloadData.extend(data)
+	# print "Payload data:", payloadData
+	#
+	# arr8 = Bluenet.encryptCtr(payloadData, sessionNonce, validationKey, sessionKey, EncryptionAccessLevel.SETUP)
+	# print "Write:", list(arr8)
+	# if (not ble.writeCharacteristic(CHAR_SETUP_CONFIG_CONTROL, arr8)):
+	# 	print "failed to write to CHAR_SETUP_CONFIG_CONTROL"
+	# 	exit(1)
 
-	arr8 = Bluenet.encryptCtr(payloadData, sessionNonce, validationKey, sessionKey, accessLevel)
+	#########################
+	# Write Crownstone name #
+	#########################
+	# crownstoneName = "test"
+	# data = Conversion.string_to_uint8_array(crownstoneName)
+	# dataSize = len(data)
+	# payloadData = [ConfigTypes.CONFIG_NAME, ValueOpCode.WRITE_VALUE]
+	# payloadData.extend(Conversion.uint16_to_uint8_array(dataSize))
+	# payloadData.extend(data)
+	# print "Payload data:", payloadData
+	#
+	# arr8 = Bluenet.encryptCtr(payloadData, sessionNonce, validationKey, sessionKey, EncryptionAccessLevel.SETUP)
+	# print "Write:", list(arr8)
+	# if (not ble.writeCharacteristic(CHAR_SETUP_CONFIG_CONTROL, arr8)):
+	# 	print "failed to write to CHAR_SETUP_CONFIG_CONTROL"
+	# 	exit(1)
 
-	print "Write:", list(arr8)
-	if (not ble.writeCharacteristic(CHAR_SETUP_CONFIG_CONTROL, arr8)):
-		print "failed to write to CHAR_SETUP_CONFIG_CONTROL"
-		exit(1)
+
+	##############################
+	# Put Crownstone in DFU mode #
+	##############################
+	# data = []
+	# dataSize = len(data)
+	# payloadData = [CommandTypes.CMD_GOTO_DFU, 0]
+	# payloadData.extend(Conversion.uint16_to_uint8_array(dataSize))
+	# payloadData.extend(data)
+	# print "Payload data:", payloadData
+	#
+	# arr8 = Bluenet.encryptCtr(payloadData, sessionNonce, validationKey, sessionKey, EncryptionAccessLevel.SETUP)
+	# print "Write:", list(arr8)
+	# if (not ble.writeCharacteristic(CHAR_SETUP_CONTROL, arr8)):
+	# 	print "failed to write to CHAR_SETUP_CONTROL"
+	# 	exit(1)
+
+	############################
+	# Factory reset Crownstone #
+	############################
+	# data = Conversion.hex_string_to_uint8_array(FACTORY_RESET_CODE)
+	# dataSize = len(data)
+	# payloadData = [CommandTypes.CMD_FACTORY_RESET, 0]
+	# payloadData.extend(Conversion.uint16_to_uint8_array(dataSize))
+	# payloadData.extend(data)
+	# print "Payload data:", payloadData
+	#
+	# arr8 = Bluenet.encryptCtr(payloadData, sessionNonce, validationKey, sessionKey, EncryptionAccessLevel.SETUP)
+	# print "Write:", list(arr8)
+	# if (not ble.writeCharacteristic(CHAR_SETUP_CONTROL, arr8)):
+	# 	print "failed to write to CHAR_SETUP_CONTROL"
+	# 	exit(1)
+
+	##################
+	# Switch off pwm #
+	##################
+	# data = [0]
+	# dataSize = len(data)
+	# payloadData = [CommandTypes.CMD_PWM, 0]
+	# payloadData.extend(Conversion.uint16_to_uint8_array(dataSize))
+	# payloadData.extend(data)
+	# print "Payload data:", payloadData
+	#
+	# arr8 = Bluenet.encryptCtr(payloadData, sessionNonce, validationKey, sessionKey, EncryptionAccessLevel.SETUP)
+	# print "Write:", list(arr8)
+	# if (not ble.writeCharacteristic(CHAR_SETUP_CONTROL, arr8)):
+	# 	print "failed to write to CHAR_SETUP_CONTROL"
+	# 	exit(1)
+
 
 	# Disconnect from peer device if not done already and clean up.
 	ble.disconnect()
