@@ -56,6 +56,8 @@ CHAR_DFU_VERION                    = "00001534-1212-efde-1523-785feabcd123"
 RESET_CODE_RESET = 1
 RESET_CODE_DFU = 66
 
+FACTORY_RESET_CODE = "EFBEADDE"
+
 class MeshHandleType:
 	HUB   = 1
 	DATA  = 2
@@ -320,8 +322,13 @@ class Bluenet:
 		return crc
 
 	@staticmethod
-	def encryptCtr(payloadData, sessionNonce, validationKey, key, accessLevel, ):
-		print "sessionNonce:", list(sessionNonce)
+	def encryptCtr(payloadData, sessionNonce, validationKey, key, accessLevel, verbose=False):
+		if (verbose):
+			print "key:", list(key)
+			print "accessLevel:", accessLevel
+			print "sessionNonce:", list(sessionNonce)
+			print "validationKey:", list(validationKey)
+
 		if (len(sessionNonce) is not 5):
 			print "Session nonce should be a bytearray of size 5"
 			return None
@@ -334,16 +341,16 @@ class Bluenet:
 			print "Key should be a bytearray of size 16"
 			return None
 
-
-
 		packetNonce = bytearray(Crypto.Random.get_random_bytes(3))
-		print "packetNonce:", list(packetNonce)
+		if (verbose):
+			print "packetNonce:", list(packetNonce)
 
-		payload = validationKey
+		payload = bytearray(validationKey) # Make sure we have a copy
 		payload.extend(payloadData)
 		# Zero pad until a multiple of 16
 		payload.extend([0] * ((16-(len(payload)%16))%16))
-		print "payload:", list(payload)
+		if (verbose):
+			print "payload:", list(payload)
 
 		# TODO: use AES.MODE_CTR instead of implementing it ourselves?
 		# counter = Counter.new(128, little_endian=True, initial_value=0)
@@ -361,14 +368,15 @@ class Bluenet:
 			# since we never go any further than 255 blocks
 			iv.extend([0]*7)
 			iv.extend([ctr])
-			print "iv:", list(iv)
+			if (verbose):
+				print "iv:", list(iv)
 			encryptedIv = bytearray(cipher.encrypt(str(iv)))
 			# xor the data with the encrypted iv
 			for i in range(0,16):
 				encryptedPayload.append(encryptedIv[i] ^ payload[i])
 
 		arr8 = bytearray(packetNonce) # Make sure we have a copy
-		arr8.extend(accessLevel)
+		arr8.append(accessLevel)
 		arr8.extend(encryptedPayload)
 
 		return arr8
