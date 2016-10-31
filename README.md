@@ -1,6 +1,6 @@
 ble-automator
 ======================================
-Automate interactions with a BLE device. 
+Automate interactions with a BLE device.
 
 Some of the scripts have hardcoded addresses.
 
@@ -35,7 +35,7 @@ Prior to running, install:
 * bluez
 * python 2.7
 * [bluepy](https://github.com/IanHarvey/bluepy) - Currently you have to get an older version:
-  * `sudo apt-get install git build-essential libglib2.0-dev libdbus-1-dev`
+  * `sudo apt-get install git build-essential libglib2.0-dev libdbus-1-dev python-dev`
   * `git clone https://github.com/IanHarvey/bluepy.git`
   * `cd bluepy`
   * `git checkout v/0.9.11`
@@ -47,6 +47,7 @@ Prior to running, install:
 sudo apt-get install bluez python-pip
 sudo pip install pexpect
 sudo pip install intelhex --allow-unverified intelhex
+sudo pip install pycrypto
 ```
 
 ======================================
