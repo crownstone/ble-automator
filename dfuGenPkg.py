@@ -36,7 +36,7 @@ deviceTemplate = {
 }
 
 def hexFileToArr(filename):
-	print "filename", filename
+	log.i("filename" + filename)
 	ih = IntelHex(filename)
 	buf = ih.tobinarray()
 	log.d("End and start of the binary: " + str(ih._get_start_end()))
@@ -115,13 +115,14 @@ def prepare():
 	os.mkdir('tmp')
 
 def writeToZip(path, type):
-	try:
-		log.i("Create " + type + ".zip file")
-		shutil.make_archive(path + '/' + type, 'zip', base_dir='.', root_dir='tmp')
-		# shutil.make_archive(type, 'zip', 'tmp')
-	finally:
-		log.i("Remove tmp directory, recursively")
-		shutil.rmtree('tmp')
+	log.i("Create " + type + ".zip file")
+	if not path:
+		filename = type
+	else:
+		filename = path + '/' + type
+
+	shutil.make_archive(filename, 'zip', base_dir='.', root_dir='tmp')
+	# shutil.make_archive(type, 'zip', 'tmp')
 
 
 def createApplicationDFU(filename, sd_req):
@@ -226,15 +227,19 @@ if __name__ == '__main__':
 	if (options.debug):
 		log.setLevel(logging.D2)
 
-	if options.combined:
-		if options.application_hex and options.bootloader_hex:
-			createCombinedBlAppDFU(options.bootloader_hex, options.application_hex, options.sd_req)
-	else:
-		if options.application_hex:
-			createApplicationDFU(options.application_hex, options.sd_req)
+	try:
+		if options.combined:
+			if options.application_hex and options.bootloader_hex:
+				createCombinedBlAppDFU(options.bootloader_hex, options.application_hex, options.sd_req)
+		else:
+			if options.application_hex:
+				createApplicationDFU(options.application_hex, options.sd_req)
 
-		if options.bootloader_hex:
-			createBootloaderDFU(options.bootloader_hex, options.sd_req)
+			if options.bootloader_hex:
+				createBootloaderDFU(options.bootloader_hex, options.sd_req)
 
-		if options.softdevice_hex:
-			createSoftdeviceDFU(options.softdevice_hex, options.sd_req)
+			if options.softdevice_hex:
+				createSoftdeviceDFU(options.softdevice_hex, options.sd_req)
+	finally:
+		log.i("Remove tmp directory, recursively")
+		shutil.rmtree('tmp')
