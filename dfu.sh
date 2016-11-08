@@ -21,5 +21,5 @@ while getopts "Bt:a:i:vd" optname; do
 	esac
 done
 
-echo "./dfu.py -f $BLUENET_CONFIG_DIR/build/$dfu_target.hex $args"
-./dfu.py -f $BLUENET_CONFIG_DIR/build/$dfu_target.hex $args
+echo "./dfu.py -f $BLUENET_BIN_DIR/$dfu_target.hex $args"
+./dfu.py -f $BLUENET_BIN_DIR/$dfu_target.hex $args

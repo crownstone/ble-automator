@@ -4,7 +4,7 @@ import os
 import optparse
 import time
 from intelhex import IntelHex
-import logging
+import bleLog
 from bleAutomator2 import *
 from Bluenet import *
 from ConversionUtils import *
@@ -57,7 +57,7 @@ CHUNK_SIZE = 20
 
 class BleDfuUploader(object):
 
-	def __init__(self, bleAddress, hexfilePath, interface, logger, imageType=DfuImageType.APPLICATION):
+	def __init__(self, bleAddress, hexfilePath, interface, Logger, imageType=DfuImageType.APPLICATION):
 		"""
 		:param bleAddress:  Bluetooth address of the target device
 		:type bleAddress:   str
@@ -65,8 +65,8 @@ class BleDfuUploader(object):
 		:type hexfilePath:  str
 		:param interface:   Interface to use (for example: hci0)
 		:type interface:    str
-		:param logger:
-		:type logger:       logging.Logger
+		:param Logger:
+		:type Logger:       bleLog.Logger
 		:param imageType:   Type of image to be sent (app, bootloader, softdevice)
 		:type imageType:    DfuImageType
 		:return:
@@ -74,7 +74,7 @@ class BleDfuUploader(object):
 		self.hexfilePath = hexfilePath
 		self.address = bleAddress
 		self.interface = interface
-		self.log = logger
+		self.log = Logger
 		self.imageType = imageType
 		self.enableDfuAttemptNum = 0
 		self.ble = BleAutomator(self.interface)
@@ -98,7 +98,7 @@ class BleDfuUploader(object):
 					self.log.e("Not in DFU, nor has the toggle characteristic, aborting..")
 					return False
 				else:
-					self.log.i("Node is in DFU mode", logging.LogType.SUCCESS)
+					self.log.i("Node is in DFU mode", bleLog.LogType.SUCCESS)
 					return True
 
 			else:
@@ -262,7 +262,7 @@ class BleDfuUploader(object):
 			self.log.e("Could not activate.")
 			return False
 
-		self.log.i("Validated. Rebooting application.", logging.LogType.SUCCESS)
+		self.log.i("Validated. Rebooting application.", bleLog.LogType.SUCCESS)
 
 		return True
 
@@ -273,7 +273,7 @@ class BleDfuUploader(object):
 
 
 if __name__ == '__main__':
-	log = logging.Logger(logging.LogLevel.INFO)
+	log = bleLog.Logger(bleLog.LogLevel.INFO)
 	try:
 		parser = optparse.OptionParser(usage='%prog -f <hex_file> -a <dfu_target_address>\n\nExample:\n\tdfu.py -f blinky.hex -a cd:e3:4a:47:1c:e4',
 									   version='0.1')
@@ -331,9 +331,9 @@ if __name__ == '__main__':
 		exit(2)
 
 	if (options.verbose):
-		log.setLogLevel(logging.LogLevel.DEBUG)
+		log.setLogLevel(bleLog.LogLevel.DEBUG)
 	if (options.debug):
-		log.setLogLevel(logging.LogLevel.DEBUG2)
+		log.setLogLevel(bleLog.LogLevel.DEBUG2)
 
 	imageType = DfuImageType.APPLICATION
 	if (options.bootloader):
@@ -360,13 +360,13 @@ if __name__ == '__main__':
 	if (not options.bootloader):
 		time.sleep(5)
 
-		ble_dfu.log.d("Reconnecting to device to verify firmware.", logging.LogType.SUCCESS)
+		ble_dfu.log.d("Reconnecting to device to verify firmware.", bleLog.LogType.SUCCESS)
 
 		if (ble_dfu.connect() and (ble_dfu.ble.getHandle(CHAR_RESET) or ble_dfu.ble.getHandle(CHAR_CONTROL))):
 
 			time.sleep(1)
 
-			ble_dfu.log.d("Success!!", logging.LogType.SUCCESS)
+			ble_dfu.log.d("Success!!", bleLog.LogType.SUCCESS)
 
 			ble_dfu.disconnect()
 

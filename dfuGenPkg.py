@@ -8,7 +8,7 @@ import os
 import optparse
 import time
 from intelhex import IntelHex
-import logging
+import bleLog
 from Bluenet import *
 # import manifestTemplates
 import shutil
@@ -155,7 +155,7 @@ if __name__ == '__main__':
 
 	print os.getcwd()
 
-	log = logging.Logger(logging.LogLevel.DEBUG)
+	log = bleLog.Logger(bleLog.LogLevel.DEBUG)
 	try:
 		parser = optparse.OptionParser(usage='%prog -a <application_hex> -b <bootloader_hex> -s <softdevice_hex> -r <required_softdevice>\n\nExample:\n\t%prog.py -a crownstone.hex',
 									   version='0.1')
@@ -223,9 +223,9 @@ if __name__ == '__main__':
 		exit(2)
 
 	if (options.verbose):
-		log.setLevel(logging.D)
+		log.setLevel(bleLog.D)
 	if (options.debug):
-		log.setLevel(logging.D2)
+		log.setLevel(bleLog.D2)
 
 	try:
 		if options.combined:
