@@ -10,7 +10,7 @@ class Conversion:
 	####################################
 	@staticmethod
 	def uint8_to_int8(byte):
-		"""	Convert a unsigned byte to a signed byte """
+		"""	Convert an unsigned byte to a signed byte """
 		res = byte
 		if (res > 127):
 			res -= 256
@@ -30,6 +30,14 @@ class Conversion:
 		res = val
 		if (res > 2147483647):
 			res -= 4294967296
+		return res
+
+	@staticmethod
+	def int8_to_uint8(byte):
+		"""	Convert a signed byte to an unsigned byte """
+		res = byte
+		if (res < 0):
+			res += 256
 		return res
 
 	#######################################
@@ -237,3 +245,21 @@ class Conversion:
 		"""
 		arr8 = bytearray(binascii.a2b_hex(hexStr.encode('utf-8')))
 		return Conversion.uint8_to_uint32(arr8)
+
+	@staticmethod
+	def address_to_uint8_array(addressStr):
+		"""
+		Converts a bluetooth address string to a uint8 array
+		:param addressStr: address string to be converted, must be like: "01:23:45:67:89:AB"
+		:type addressStr: str
+		:rtype: list
+		"""
+		hexStrArr = addressStr.split(":")
+		if (len(hexStrArr) != 6):
+			return []
+
+		arr8 = []
+		for p in reversed(hexStrArr):
+			arr8.append(Conversion.hex_string_to_uint8_array(p)[0])
+		return bytearray(arr8)
+
