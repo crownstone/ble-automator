@@ -19,7 +19,7 @@ if __name__ == '__main__':
 				dest="address",
 				type="string",
 				default=None,
-				help='DFU target address. (Can be found by running "hcitool lescan")'
+				help='Target address. (Can be found by running "hcitool lescan")'
 				)
 		parser.add_option('-i', '--interface',
 				action='store',
