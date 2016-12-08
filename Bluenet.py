@@ -3,7 +3,7 @@ __author__ = 'Bart van Vliet'
 import math
 from ConversionUtils import *
 from Crypto.Cipher import AES
-# from Crypto.Util import Counter
+from Crypto.Util import Counter
 import Crypto.Random
 
 CHAR_CONTROL                       = "24f00001-7d10-4805-bfc1-7663a01c3bff"
@@ -57,6 +57,7 @@ RESET_CODE_RESET = 1
 RESET_CODE_DFU = 66
 
 FACTORY_RESET_CODE = "EFBEADDE"
+CAFEBABE = 0xCAFEBABE
 
 class MeshHandleType:
 	HUB   = 1
@@ -176,6 +177,13 @@ class EncryptionType:
 	CTR_CAFEBABE       = 1
 	ECB_GUEST          = 2
 	ECB_GUEST_CAFEBABE = 3
+
+ENCRYPTION_AES_BLOCK_SIZE = 16
+ENCRYPTION_VALIDATION_KEY_LENGTH = 4
+ENCRYPTION_SESSION_NONCE_LENGTH = 5
+ENCRYPTION_PACKET_NONCE_LENGTH = 3
+ENCRYPTION_ACCESS_LEVEL_LENGTH = 1
+
 
 class Bluenet:
 	@staticmethod
@@ -329,26 +337,27 @@ class Bluenet:
 			print "sessionNonce:", list(sessionNonce)
 			print "validationKey:", list(validationKey)
 
-		if (len(sessionNonce) is not 5):
-			print "Session nonce should be a bytearray of size 5"
+		if (len(sessionNonce) is not ENCRYPTION_SESSION_NONCE_LENGTH):
+			print "Session nonce should be a bytearray of size " + ENCRYPTION_SESSION_NONCE_LENGTH
 			return None
 
-		if (len(validationKey) is not 4):
-			print "Validation key should be a bytearray of size 4"
+		if (len(validationKey) is not ENCRYPTION_VALIDATION_KEY_LENGTH):
+			print "Validation key should be a bytearray of size " + ENCRYPTION_VALIDATION_KEY_LENGTH
 			return None
 
-		if (len(key) is not 16):
-			print "Key should be a bytearray of size 16"
+		if (len(key) is not ENCRYPTION_AES_BLOCK_SIZE):
+			print "Key should be a bytearray of size " + ENCRYPTION_AES_BLOCK_SIZE
 			return None
 
 		packetNonce = bytearray(Crypto.Random.get_random_bytes(3))
+		packetNonce = bytearray([99, 149, 150])
 		if (verbose):
 			print "packetNonce:", list(packetNonce)
 
 		payload = bytearray(validationKey) # Make sure we have a copy
 		payload.extend(payloadData)
 		# Zero pad until a multiple of 16
-		payload.extend([0] * ((16-(len(payload)%16))%16))
+		payload.extend([0] * ((ENCRYPTION_AES_BLOCK_SIZE - (len(payload) % ENCRYPTION_AES_BLOCK_SIZE)) % ENCRYPTION_AES_BLOCK_SIZE))
 		if (verbose):
 			print "payload:", list(payload)
 
@@ -361,22 +370,118 @@ class Bluenet:
 		encryptedPayload = bytearray()
 		iv = bytearray(packetNonce) # Make sure we have a copy
 		iv.extend(sessionNonce)
-		for ctr in range(0, int(len(payload) / 16)):
-#			iv.extend([0]*4)
-#			iv.extend(Conversion.uint32_to_uint8_array(ctr))
+		iv.extend([0]*(ENCRYPTION_AES_BLOCK_SIZE/2))
+#		iv.extend([0]*4)
+#		iv.extend(Conversion.uint32_to_uint8_array(ctr))
+		for ctr in range(0, int(len(payload) / ENCRYPTION_AES_BLOCK_SIZE)):
 			# Concat with 8 byte counter, but we actually only use the last byte
 			# since we never go any further than 255 blocks
-			iv.extend([0]*7)
-			iv.extend([ctr])
+			iv[15] = ctr
 			if (verbose):
 				print "iv:", list(iv)
 			encryptedIv = bytearray(cipher.encrypt(str(iv)))
 			# xor the data with the encrypted iv
-			for i in range(0,16):
-				encryptedPayload.append(encryptedIv[i] ^ payload[i])
+			for i in range(0,ENCRYPTION_AES_BLOCK_SIZE):
+				encryptedPayload.append(encryptedIv[i] ^ payload[i + ctr*ENCRYPTION_AES_BLOCK_SIZE])
 
 		arr8 = bytearray(packetNonce) # Make sure we have a copy
 		arr8.append(accessLevel)
 		arr8.extend(encryptedPayload)
 
 		return arr8
+
+
+	@staticmethod
+	def decryptCtr(encryptedPacket, sessionNonce, validationKey, adminkey, memberkey, guestkey, verbose=False):
+		if (verbose):
+			print "adminkey:", list(adminkey)
+			print "memberkey:", list(memberkey)
+			print "guestkey:", list(guestkey)
+			print "sessionNonce:", list(sessionNonce)
+			print "validationKey:", list(validationKey)
+
+		if (len(encryptedPacket) < ENCRYPTION_PACKET_NONCE_LENGTH + ENCRYPTION_ACCESS_LEVEL_LENGTH + ENCRYPTION_AES_BLOCK_SIZE):
+			print "Wrong data length:", encryptedPacket
+			return None
+
+		if (len(sessionNonce) is not ENCRYPTION_SESSION_NONCE_LENGTH):
+			print "Session nonce should be a bytearray of size " + ENCRYPTION_SESSION_NONCE_LENGTH
+			return None
+
+		if (len(validationKey) is not ENCRYPTION_VALIDATION_KEY_LENGTH):
+			print "Validation key should be a bytearray of size " + ENCRYPTION_VALIDATION_KEY_LENGTH
+			return None
+
+		if ((len(adminkey) is not ENCRYPTION_AES_BLOCK_SIZE) or (len(memberkey) is not ENCRYPTION_AES_BLOCK_SIZE) or (len(guestkey) is not ENCRYPTION_AES_BLOCK_SIZE)):
+			print "Key should be a bytearray of size " + ENCRYPTION_AES_BLOCK_SIZE
+			return None
+
+		if ((len(encryptedPacket) - ENCRYPTION_PACKET_NONCE_LENGTH - ENCRYPTION_ACCESS_LEVEL_LENGTH) % ENCRYPTION_AES_BLOCK_SIZE != 0):
+			print "Encrypted data length must be multiple of", ENCRYPTION_AES_BLOCK_SIZE
+			return None
+
+		accessLevel = encryptedPacket[ENCRYPTION_PACKET_NONCE_LENGTH]
+		if (verbose):
+			print "accessLevel:", accessLevel
+
+		key = bytearray()
+		if (accessLevel == EncryptionAccessLevel.ADMIN):
+			key = adminkey
+		elif (accessLevel == EncryptionAccessLevel.MEMBER):
+			key = memberkey
+		elif (accessLevel == EncryptionAccessLevel.GUEST):
+			key = guestkey
+		else:
+			print "Invalid access level:", accessLevel
+			return None
+
+		packetNonce = encryptedPacket[0:ENCRYPTION_PACKET_NONCE_LENGTH]
+		iv = bytearray(packetNonce)
+		iv.extend(sessionNonce)
+		iv.extend([0]*(ENCRYPTION_AES_BLOCK_SIZE/2))
+		if (verbose):
+			print "iv:", list(iv)
+
+		# TODO: use AES.MODE_CTR instead of implementing it ourselves?
+		# counter = Counter.new(128, little_endian=True, initial_value=0)
+		# counter = Counter.new(128, little_endian=False, initial_value=0)
+		# cipher = AES.new(str(key), AES.MODE_CTR, counter=counter)
+
+		cipher = AES.new(str(key), AES.MODE_ECB)
+		encryptedPayload = bytearray(encryptedPacket[ENCRYPTION_PACKET_NONCE_LENGTH + ENCRYPTION_ACCESS_LEVEL_LENGTH:])
+		decryptedData = bytearray()
+		for ctr in range(0, int(len(encryptedPayload) / ENCRYPTION_AES_BLOCK_SIZE)):
+			# Concat with 8 byte counter, but we actually only use the last byte
+			# since we never go any further than 255 blocks
+			iv[15] = ctr
+			encryptedIv = bytearray(cipher.encrypt(str(iv)))
+			# xor the data with the encrypted iv
+			for i in range(0,ENCRYPTION_AES_BLOCK_SIZE):
+				decryptedData.append(encryptedIv[i] ^ encryptedPayload[i + ctr*ENCRYPTION_AES_BLOCK_SIZE])
+
+		for i in range(0, ENCRYPTION_VALIDATION_KEY_LENGTH):
+			if (decryptedData[i] != validationKey[i]):
+				print "Validation key does not match got:", list(validationKey), "received:", list(decryptedData[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
+				return None
+
+		arr8 = bytearray(decryptedData[ENCRYPTION_VALIDATION_KEY_LENGTH:])
+		return arr8
+
+
+	@staticmethod
+	def decryptEcb(encryptedPacket, key, verbose=False):
+		if (len(encryptedPacket) != ENCRYPTION_AES_BLOCK_SIZE):
+			print "Wrong data length:", encryptedPacket
+			return None
+
+		if (len(key) is not ENCRYPTION_AES_BLOCK_SIZE):
+			print "Key should be a bytearray of size " + ENCRYPTION_AES_BLOCK_SIZE
+			return None
+
+		# We never need to ECB decrypt more than 1 block
+		encryptedData = bytearray(encryptedPacket)
+		cipher = AES.new(str(key), AES.MODE_ECB)
+		arr8 = bytearray(cipher.decrypt(str(encryptedData)))
+		return arr8
+
+
