@@ -29,6 +29,11 @@ if __name__ == '__main__':
 				dest="verbose",
 				help='Be verbose.'
 				)
+		parser.add_option('-e', '--encryption',
+				action='store_true',
+				dest="encryption",
+				help='Use encryption.'
+				)
 		parser.add_option('-d', '--dfu-mode',
 				action='store_true',
 				dest="dfu",
@@ -52,16 +57,42 @@ if __name__ == '__main__':
 	if (not ble.connect(options.address)):
 		exit(1)
 
+	adminKey = "adminKeyForCrown"
+	memberKey = "memberKeyForHome"
+	guestKey = "guestKeyForGirls"
+
+	sessionNonce = None
+	validationKey = None
+	if (options.encryption):
+		sessionPacket = ble.readCharacteristic(CHAR_SESSION_NONCE)
+		sessionPacket = Bluenet.decryptEcb(sessionPacket, guestKey)
+		sessionNonce = sessionPacket[ENCRYPTION_VALIDATION_KEY_LENGTH : ENCRYPTION_VALIDATION_KEY_LENGTH+ENCRYPTION_SESSION_NONCE_LENGTH]
+		validationKey = sessionPacket[ENCRYPTION_VALIDATION_KEY_LENGTH : ENCRYPTION_VALIDATION_KEY_LENGTH+ENCRYPTION_VALIDATION_KEY_LENGTH]
+
+		if (options.verbose):
+			print "CAFEBABE:", list(sessionPacket[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
+			print CAFEBABE, " = ", Conversion.uint8_array_to_uint32(sessionPacket[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
+			print "sessionNonce:", list(sessionNonce)
+			print "validationKey:", list(validationKey)
+
+
 	resetCode = RESET_CODE_RESET
 	if (options.dfu):
 		resetCode = RESET_CODE_DFU
 
+	if (options.encryption):
+		encryptedArr8 = Bluenet.encryptCtr([resetCode], sessionNonce, validationKey, adminKey, EncryptionAccessLevel.ADMIN, options.verbose)
+	else:
+		encryptedArr8 = [resetCode]
+
 	# Write 1 to reset
 	# Write should fail, since we won't get a response
-	if (ble.writeCharacteristic(CHAR_RESET, [resetCode])):
+	if (ble.writeCharacteristic(CHAR_RESET, encryptedArr8)):
+		print "Failed to reset"
 		exit(1)
 
 	# Disconnect from peer device if not done already and clean up.
 	ble.disconnect()
 
+	print "Reset successful"
 	exit(0)

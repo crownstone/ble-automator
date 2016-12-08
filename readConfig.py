@@ -34,6 +34,11 @@ if __name__ == '__main__':
 				dest="verbose",
 				help='Be verbose.'
 				)
+		parser.add_option('-e', '--encryption',
+				action='store_true',
+				dest="encryption",
+				help='Use encryption.'
+				)
 		parser.add_option('-t', '--type',
 				action='store',
 				dest="configType",
@@ -74,11 +79,35 @@ if __name__ == '__main__':
 	if (not ble.connect(options.address)):
 		exit(1)
 
+
+	adminKey = "adminKeyForCrown"
+	memberKey = "memberKeyForHome"
+	guestKey = "guestKeyForGirls"
+
+	sessionNonce = None
+	validationKey = None
+	if (options.encryption):
+		sessionPacket = ble.readCharacteristic(CHAR_SESSION_NONCE)
+		sessionPacket = Bluenet.decryptEcb(sessionPacket, guestKey)
+		sessionNonce = sessionPacket[ENCRYPTION_VALIDATION_KEY_LENGTH : ENCRYPTION_VALIDATION_KEY_LENGTH+ENCRYPTION_SESSION_NONCE_LENGTH]
+		validationKey = sessionPacket[ENCRYPTION_VALIDATION_KEY_LENGTH : ENCRYPTION_VALIDATION_KEY_LENGTH+ENCRYPTION_VALIDATION_KEY_LENGTH]
+
+		if (options.verbose):
+			print "CAFEBABE:", list(sessionPacket[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
+			print CAFEBABE, " = ", Conversion.uint8_array_to_uint32(sessionPacket[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
+			print "sessionNonce:", list(sessionNonce)
+			print "validationKey:", list(validationKey)
+
+
 	# Write type to select, first byte is the type, second byte is the
 	# opCode
 	arr8 = [options.configType, ValueOpCode.READ_VALUE]
+	if (options.encryption):
+		encryptedArr8 = Bluenet.encryptCtr(arr8, sessionNonce, validationKey, adminKey, EncryptionAccessLevel.ADMIN, options.verbose)
+	else:
+		encryptedArr8 = arr8
 
-	if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, arr8)):
+	if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, encryptedArr8)):
 		print "Characteristic not found"
 		exit(1)
 
@@ -90,23 +119,32 @@ if __name__ == '__main__':
 		print "Couldn't read value"
 		exit(1)
 
+	if (options.encryption):
+		decryptedArr8 = Bluenet.decryptCtr(arr8, sessionNonce, validationKey, adminKey, memberKey, guestKey, options.verbose)
+	else:
+		decryptedArr8 = arr8
+
 	# First byte is the type
-	print "Type: %i" % (arr8[0])
-	if (options.configType != arr8[0]):
+	print "Type: %i" % (decryptedArr8[0])
+	if (options.configType != decryptedArr8[0]):
 		print "Type mismatch"
 		exit(1)
 
 	# Second byte is the op code, not really necessary to check that, would be READ_VALUE (0x0) in this case
 
 	# Third and fourth bytes is the length of the data, as uint16_t
-	length = Conversion.uint8_array_to_uint16(arr8[2:4])
+	length = Conversion.uint8_array_to_uint16(decryptedArr8[2:4])
 
 	# Fifth and on bytes is the data
-	data = arr8[4:]
+	data = decryptedArr8[4:]
 	if (len(data) < length):
 		print "Size mismatch"
-		print "data:", list(arr8)
+		print "data:", list(decryptedArr8)
 		exit(1)
+	data = data[0:length]
+
+	if (options.verbose):
+		print "data:", list(decryptedArr8)
 
 	# Output as string or as single uint8
 	if (options.as_number):

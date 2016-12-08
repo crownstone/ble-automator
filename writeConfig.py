@@ -35,6 +35,11 @@ if __name__ == '__main__':
 				dest="verbose",
 				help='Be verbose.'
 				)
+		parser.add_option('-e', '--encryption',
+				action='store_true',
+				dest="encryption",
+				help='Use encryption.'
+				)
 		parser.add_option('-t', '--type',
 				action='store',
 				dest="configType",
@@ -137,6 +142,26 @@ if __name__ == '__main__':
 	# Add the data
 	arr8.extend(data)
 
+
+	adminKey = "adminKeyForCrown"
+	memberKey = "memberKeyForHome"
+	guestKey = "guestKeyForGirls"
+
+	sessionNonce = None
+	validationKey = None
+	if (options.encryption):
+		sessionPacket = ble.readCharacteristic(CHAR_SESSION_NONCE)
+		sessionPacket = Bluenet.decryptEcb(sessionPacket, guestKey)
+		sessionNonce = sessionPacket[ENCRYPTION_VALIDATION_KEY_LENGTH : ENCRYPTION_VALIDATION_KEY_LENGTH+ENCRYPTION_SESSION_NONCE_LENGTH]
+		validationKey = sessionPacket[ENCRYPTION_VALIDATION_KEY_LENGTH : ENCRYPTION_VALIDATION_KEY_LENGTH+ENCRYPTION_VALIDATION_KEY_LENGTH]
+
+		if (options.verbose):
+			print "CAFEBABE:", list(sessionPacket[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
+			print CAFEBABE, " = ", Conversion.uint8_array_to_uint32(sessionPacket[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
+			print "sessionNonce:", list(sessionNonce)
+			print "validationKey:", list(validationKey)
+
+
 	if (options.viaMesh):
 		meshArr8 = [MeshHandleType.DATA, 0] # Handle
 		meshArr8.extend(Conversion.uint16_to_uint8_array(6+2+len(arr8))) # Length of target address + mesh message type + data
@@ -150,7 +175,13 @@ if __name__ == '__main__':
 	else:
 		if (options.verbose):
 				print "Write", arr8
-		if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, arr8)):
+
+		# encryptCtr(payloadData, sessionNonce, validationKey, key, accessLevel, verbose=False):
+		if (options.encryption):
+			encryptedArr8 = Bluenet.encryptCtr(arr8, sessionNonce, validationKey, adminKey, EncryptionAccessLevel.ADMIN, options.verbose)
+		else:
+			encryptedArr8 = arr8
+		if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, encryptedArr8)):
 			print "failed to write to CHAR_CONFIG_CONTROL"
 			exit(1)
 
