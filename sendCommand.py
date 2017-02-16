@@ -80,6 +80,23 @@ if __name__ == '__main__':
 				dest="viaMesh",
 				help='Send command over the mesh'
 				)
+		parser.add_option('-b', '--broadcast',
+				action='store_true',
+				dest="broadcast"
+				)
+		parser.add_option('-g', '--target',
+				action='store',
+				dest="target",
+				type="string",
+				default=None,
+				help='target crownstone id'
+				)
+
+		parser.add_option('-p', '--setup',
+				action='store_true',
+				dest="viaSetup",
+				help='Write value setup'
+				)
 
 		options, args = parser.parse_args()
 
@@ -185,15 +202,54 @@ if __name__ == '__main__':
 		# Add the data
 		arr8.extend(data)
 
+		print "command", list(arr8)
+	else:
+		arr8.extend([0, 0])
+
 	if (options.viaMesh):
-		meshArr8 = [MeshHandleType.DATA, 0] # Handle
-		meshArr8.extend(Conversion.uint16_to_uint8_array(6+2+len(arr8))) # Length of target address + mesh message type + data
-		meshArr8.extend([0,0,0,0,0,0]) # target address: all 0 to target any node
+
+		if (options.target):
+			# split the param string and convert into integer values
+			targetList = map(int, options.target.split())
+			targetListLen = len(targetList)
+
+			if (targetListLen == 0):
+				print "invalid target list"
+				exit(1)
+		elif (options.broadcast):
+			targetListLen = 0
+		else:
+			print "need to provide target crownstone id. use -b for broadcast instead"
+			exit(1)
+
+		meshArr8 = [4, 0] # Handle
+		# meshArr8.extend(Conversion.uint16_to_uint8_array(6+2+len(arr8))) # Length of target address + mesh message type + data
+		meshArr8.extend(Conversion.uint16_to_uint8_array(3+ targetListLen*2 + len(arr8))) # Length of target address + mesh message type + data
+
 		meshArr8.extend(Conversion.uint16_to_uint8_array(MeshDataMessageType.CONTROL_MESSAGE))
+		# meshArr8.extend(Conversion.uint16_to_uint8_array(MeshDataMessageType.CONFIG_MESSAGE))
+		# meshArr8.extend(Conversion.uint16_to_uint8_array(MeshDataMessageType.STATE_MESSAGE))
+
+		meshArr8.extend([targetListLen])
+
+		if (targetListLen > 0):
+			for i in xrange(0, targetListLen):
+				meshArr8.extend(Conversion.uint16_to_uint8_array(targetList[i]))
+
 		meshArr8.extend(arr8)
 		print meshArr8
-		if (not ble.writeCharacteristic(CHAR_MESH_CONTROL, meshArr8)):
-			print "Characteristic not found"
+		if (options.encryption):
+			encryptedArr8 = Bluenet.encryptCtr(arr8, sessionNonce, validationKey, adminKey, EncryptionAccessLevel.ADMIN, options.verbose)
+		else:
+			encryptedArr8 = arr8
+		if (not ble.writeCharacteristic(CHAR_MESH_CONTROL, encryptedArr8)):
+			print "failed to write to CHAR_MESH_CONTROL"
+			exit(1)
+
+		print "mesh", list(meshArr8)
+	elif (options.viaSetup):
+		if (not ble.writeCharacteristic(CHAR_SETUP_CONTROL, arr8)):
+			print "failed to write to CHAR_SETUP_CONTROL"
 			exit(1)
 	else:
 		if (options.verbose):
@@ -206,6 +262,24 @@ if __name__ == '__main__':
 		if (not ble.writeCharacteristic(CHAR_CONTROL, encryptedArr8)):
 			print "Characteristic not found"
 			exit(1)
+
+	time.sleep(0.5)
+
+	if (options.viaSetup):
+		arr8 = ble.readCharacteristic(CHAR_SETUP_CONTROL)
+	elif (options.viaMesh):
+		arr8 = ble.readCharacteristic(CHAR_MESH_CONTROL)
+	else:
+		arr8 = ble.readCharacteristic(CHAR_CONTROL)
+
+	if (len(arr8) != 2):
+		print "wrong response length", arr8
+	else:
+		err = Conversion.uint8_array_to_uint16(arr8);
+		if (err == 0):
+			print "success", err
+		else:
+			print "failed with error:", err
 
 	# Disconnect from peer device if not done already and clean up.
 	ble.disconnect()

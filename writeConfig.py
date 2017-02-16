@@ -185,7 +185,25 @@ if __name__ == '__main__':
 			print "failed to write to CHAR_CONFIG_CONTROL"
 			exit(1)
 
+	time.sleep(0.5)
+
+	if (options.viaMesh):
+		arr8 = ble.readCharacteristic(CHAR_MESH_CONTROL)
+	else:
+		arr8 = ble.readCharacteristic(CHAR_CONFIG_CONTROL)
+
+	err = 0
+	if (len(arr8) != 2):
+		print "wrong response length", arr8
+		err = 123
+	else:
+		err = Conversion.uint8_array_to_uint16(arr8);
+		if (err == 0):
+			print "success", err
+		else:
+			print "failed with error:", err
+
 	# Disconnect from peer device if not done already and clean up.
 	ble.disconnect()
 
-	exit(0)
+	exit(err)
