@@ -81,6 +81,11 @@ if __name__ == '__main__':
 				dest="viaMesh",
 				help='Write value over the mesh'
 				)
+		parser.add_option('-p', '--setup',
+				action='store_true',
+				dest="viaSetup",
+				help='Write value setup'
+				)
 
 		options, args = parser.parse_args()
 
@@ -172,6 +177,10 @@ if __name__ == '__main__':
 		if (not ble.writeCharacteristic(CHAR_MESH_CONTROL, meshArr8)):
 			print "failed to write to CHAR_MESH_CONTROL"
 			exit(1)
+	elif (options.viaSetup):
+		if (not ble.writeCharacteristic(CHAR_SETUP_CONFIG_CONTROL, arr8)):
+			print "failed to write to CHAR_SETUP_CONFIG_CONTROL"
+			exit(1)
 	else:
 		if (options.verbose):
 				print "Write", arr8
@@ -187,7 +196,9 @@ if __name__ == '__main__':
 
 	time.sleep(0.5)
 
-	if (options.viaMesh):
+	if (options.viaSetup):
+		arr8 = ble.readCharacteristic(CHAR_SETUP_CONFIG_CONTROL)
+	elif (options.viaMesh):
 		arr8 = ble.readCharacteristic(CHAR_MESH_CONTROL)
 	else:
 		arr8 = ble.readCharacteristic(CHAR_CONFIG_CONTROL)
