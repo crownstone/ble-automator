@@ -81,6 +81,11 @@ if __name__ == '__main__':
 				dest="viaMesh",
 				help='Write value over the mesh'
 				)
+		parser.add_option('-p', '--setup',
+				action='store_true',
+				dest="viaSetup",
+				help='Write value setup'
+				)
 
 		options, args = parser.parse_args()
 
@@ -172,6 +177,10 @@ if __name__ == '__main__':
 		if (not ble.writeCharacteristic(CHAR_MESH_CONTROL, meshArr8)):
 			print "failed to write to CHAR_MESH_CONTROL"
 			exit(1)
+	elif (options.viaSetup):
+		if (not ble.writeCharacteristic(CHAR_SETUP_CONFIG_CONTROL, arr8)):
+			print "failed to write to CHAR_SETUP_CONFIG_CONTROL"
+			exit(1)
 	else:
 		if (options.verbose):
 				print "Write", arr8
@@ -185,7 +194,27 @@ if __name__ == '__main__':
 			print "failed to write to CHAR_CONFIG_CONTROL"
 			exit(1)
 
+	time.sleep(0.5)
+
+	if (options.viaSetup):
+		arr8 = ble.readCharacteristic(CHAR_SETUP_CONFIG_CONTROL)
+	elif (options.viaMesh):
+		arr8 = ble.readCharacteristic(CHAR_MESH_CONTROL)
+	else:
+		arr8 = ble.readCharacteristic(CHAR_CONFIG_CONTROL)
+
+	err = 0
+	if (len(arr8) != 2):
+		print "wrong response length", arr8
+		err = 123
+	else:
+		err = Conversion.uint8_array_to_uint16(arr8);
+		if (err == 0):
+			print "success", err
+		else:
+			print "failed with error:", err
+
 	# Disconnect from peer device if not done already and clean up.
 	ble.disconnect()
 
-	exit(0)
+	exit(err)

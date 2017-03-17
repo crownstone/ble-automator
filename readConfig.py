@@ -102,19 +102,28 @@ if __name__ == '__main__':
 	# Write type to select, first byte is the type, second byte is the
 	# opCode
 	arr8 = [options.configType, ValueOpCode.READ_VALUE]
-	if (options.encryption):
-		encryptedArr8 = Bluenet.encryptCtr(arr8, sessionNonce, validationKey, adminKey, EncryptionAccessLevel.ADMIN, options.verbose)
+	
+	if (options.viaSetup):
+		if (not ble.writeCharacteristic(CHAR_SETUP_CONFIG_CONTROL, arr8)):
+			exit(1)
 	else:
-		encryptedArr8 = arr8
+		if (options.encryption):
+			encryptedArr8 = Bluenet.encryptCtr(arr8, sessionNonce, validationKey, adminKey, EncryptionAccessLevel.ADMIN, options.verbose)
+		else:
+			encryptedArr8 = arr8
 
-	if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, encryptedArr8)):
-		print "Characteristic not found"
-		exit(1)
+		if (not ble.writeCharacteristic(CHAR_CONFIG_CONTROL, encryptedArr8)):
+			print "Characteristic not found"
+			exit(1)
 
 	time.sleep(1)
 
 	# Read the value of selected type
-	arr8 = ble.readCharacteristic(CHAR_CONFIG_READ)
+
+	if (options.viaSetup):
+		arr8 = ble.readCharacteristic(CHAR_SETUP_CONFIG_READ)
+	else:
+		arr8 = ble.readCharacteristic(CHAR_CONFIG_READ)
 	if (not arr8):
 		print "Couldn't read value"
 		exit(1)
