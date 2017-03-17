@@ -77,9 +77,81 @@ if __name__ == '__main__':
 	voltageTimeBetweenTops = {"time":[], "val":[]}
 
 	voltageZeroes = {"time":[], "val":[]}
+	voltageAverages = {"time":[], "val":[]}
+
+	currentZeroes = {"time":[], "val":[]}
+	currentAverages = {"time":[], "val":[]}
+
 	voltageTimeBetweenZeroes = {"time":[], "val":[]}
 
 	power = {"time":[], "val":[]}
+
+
+	def calculateZero(currentSamples, voltageSamples, sampleIntervalUs, acPeriodUs):
+		numSamples = acPeriodUs / sampleIntervalUs
+		vMin = 2**15 - 1 # int16_max
+		vMax = -1*vMin-1 # int16_min
+		vSum = 0
+		for v in voltageSamples[0:numSamples]:
+			if (v > vMax):
+				vMax = v
+			if (v < vMin):
+				vMin = v
+			vSum += v
+		vZero = (vMax - vMin) / 2 + vMin
+		vAvg = 1.0*vSum / numSamples
+		print "vMax:", vMax, "vMin:", vMin, "vZero:", vZero, "vAvg:", vAvg
+
+		iMin = 2**15 - 1 # int16_max
+		iMax = -1*iMin-1 # int16_min
+		iSum = 0
+		for c in currentSamples[0:numSamples]:
+			if (c > iMax):
+				iMax = c
+			if (c < iMin):
+				iMin = c
+			iSum += c
+		iZero = (iMax - iMin) / 2 + iMin
+		iAvg = 1.0*iSum / numSamples
+		print "iMax:", iMax, "iMin:", iMin, "iZero:", iZero, "iAvg:", iAvg
+#		iZero = vZero
+
+		return [iZero*1000, vZero*1000, iAvg*1000, vAvg*1000]
+
+	def calculatePower(currentSamples, voltageSamples, sampleIntervalUs, acPeriodUs, iZero, vZero):
+		iMultiplier = float(0.0042)
+		vMultiplier = float(0.199)
+		pSum = np.int64(0)
+		numSamples = acPeriodUs / sampleIntervalUs
+		print "acPeriodUs:", acPeriodUs, "sampleIntervalUs:", sampleIntervalUs, "numSamples:", numSamples
+		for i in range(0, numSamples):
+			pSum = np.int64(pSum + (currentSamples[i]-iZero/1000) * (voltageSamples[i]-vZero/1000))
+		pMilliWatt = np.int32(pSum * iMultiplier * vMultiplier * 1000 / numSamples)
+		# pMilliWatt = np.int32(pSum * iMultiplier * vMultiplier * sampleIntervalUs / 1000)
+		avgPower = pMilliWatt
+		return avgPower
+
+
+	def calculatePowerDouble(currentSamples, voltageSamples, sampleIntervalUs, acPeriodUs, iZero, vZero):
+		iMultiplier = float(0.0042)
+		vMultiplier = float(0.199)
+		pSum = 0.0
+		numSamples = acPeriodUs / sampleIntervalUs
+		for i in range(0, numSamples):
+			pSum = pSum + (currentSamples[i]-iZero/1000.0) * (voltageSamples[i]-vZero/1000.0)
+		pMilliWatt = pSum * iMultiplier * vMultiplier * sampleIntervalUs / 1000.0 / 1.4142
+		avgPower = pMilliWatt
+		return avgPower
+
+	def calculateVoltageRMS(voltageSamples, sampleIntervalUs, acPeriodUs, vZero):
+		vMultiplier = float(0.20)
+		vSum = 0
+		numSamples = acPeriodUs / sampleIntervalUs
+		print "acPeriodUs:", acPeriodUs, "sampleIntervalUs:", sampleIntervalUs, "numSamples:", numSamples
+		for i in range(0, numSamples):
+			vSum += (vMultiplier*(voltageSamples[i]-vZero/1000))**2 * sampleIntervalUs/1000.0/1000.0
+		vRms = (vSum / (acPeriodUs / 1000.0 / 1000.0))**0.5
+		return vRms
 
 	with open(options.data_file, 'r') as f:
 		# data = f.read()
@@ -96,12 +168,14 @@ if __name__ == '__main__':
 			powerSamplesStruct = list(int(x) for x in words[4:])
 			# if (len(powerSamplesStruct) < 502):
 			if (len(powerSamplesStruct) < 472):
+				print "len(powerSamplesStruct)", len(powerSamplesStruct)
 				continue
 
 			ind = 0
 			currentSamplesLength = Conversion.uint8_array_to_uint16(powerSamplesStruct[ind:ind+2])
 			ind += 2
 			if (len(powerSamplesStruct[ind:]) < currentSamplesLength*2):
+				print "currentSamplesLength", currentSamplesLength
 #				break
 				continue
 			currents = Conversion.uint8_array_to_uint16_array(powerSamplesStruct[ind:ind + currentSamplesLength * 2])
@@ -111,6 +185,7 @@ if __name__ == '__main__':
 			voltageSamplesLength = Conversion.uint8_array_to_uint16(powerSamplesStruct[ind:ind+2])
 			ind += 2
 			if (len(powerSamplesStruct[ind:]) < voltageSamplesLength*2):
+				print "voltageSamplesLength", voltageSamplesLength
 #				break
 				continue
 			voltages = Conversion.uint8_array_to_uint16_array(powerSamplesStruct[ind:ind + voltageSamplesLength * 2])
@@ -124,6 +199,7 @@ if __name__ == '__main__':
 			currentTimestampsLast = Conversion.uint8_array_to_uint32(powerSamplesStruct[ind:ind+4])
 			ind += 4
 			if (len(powerSamplesStruct[ind:]) < currentTimestampsLength-1):
+				print "currentTimestampsLength", currentTimestampsLength
 #				break
 				continue
 			currentTimestamps = [currentTimestampsFirst]
@@ -139,6 +215,7 @@ if __name__ == '__main__':
 			voltageTimestampsLast = Conversion.uint8_array_to_uint32(powerSamplesStruct[ind:ind+4])
 			ind += 4
 			if (len(powerSamplesStruct[ind:]) < voltageTimestampsLength-1):
+				print "voltageTimestampsLength", voltageTimestampsLength
 #				break
 				continue
 			voltageTimestamps = [voltageTimestampsFirst]
@@ -148,6 +225,7 @@ if __name__ == '__main__':
 			# print voltageTimestamps
 
 
+			print "lengts:", currentSamplesLength, "=", currentTimestampsLength, "and", voltageSamplesLength, "=", voltageTimestampsLength
 			if (currentSamplesLength == currentTimestampsLength and voltageSamplesLength == voltageTimestampsLength):
 
 
@@ -170,188 +248,203 @@ if __name__ == '__main__':
 				voltageDiffAll["val"].extend(voltageDiff)
 				voltageDiffAll["time"].extend(voltageDiffTime)
 
-				#################################
-				#     Calculate min and max     #
-				#################################
-				vMin = 1023
-				vMinInd = -1
-				vMax = 0
-				vMaxInd = -1
-				for i in range(0, len(voltages)):
-					if (voltages[i] > vMax):
-						vMax = voltages[i]
-						vMaxInd = i
-					if (voltages[i] < vMin):
-						vMin = voltages[i]
-						vMinInd = i
-				vMean = (vMax - vMin)/2.0 + vMin
-
-				voltageMinMeanMax["time"].append(voltageTimestamps[0])
-				voltageMinMeanMax["min"].append(vMin)
-				voltageMinMeanMax["mean"].append(vMean)
-				voltageMinMeanMax["max"].append(vMax)
-
-
-
-				cMin = 1023
-				cMinInd = -1
-				cMax = 0
-				cMaxInd = -1
-				for i in range(0, len(currents)):
-					if (currents[i] > cMax):
-						cMax = currents[i]
-						cMaxInd = i
-					if (currents[i] < cMin):
-						cMin = currents[i]
-						cMinInd = i
-				cMean = (cMax - cMin)/2.0 + cMin
-
-				currentMinMeanMax["time"].append(currentTimestamps[0])
-				currentMinMeanMax["min"].append(cMin)
-				currentMinMeanMax["mean"].append(cMean)
-				currentMinMeanMax["max"].append(cMax)
-
-
-
-				##################################
-				#          Calculate tops        #
-				##################################
-
-				############# Config! ############
-				threshUp =  vMax - 0.05*(vMax-vMin)
-				threshLow = vMin + 0.05*(vMax-vMin)
-				##################################
-
-				tops=[]
-				topTimes=[]
-				overThreshInd = -1
-				underThreshInd = -1
-				localTop = 0
-				localTopInd = -1
-				for i in range(1, len(voltages)):
-					v = voltages[i]
-					# print v, overThreshInd, underThreshInd, localTop, localTopInd
-					if (overThreshInd > -1):
-						if (v > localTop):
-							localTop = v
-							localTopInd = i
-						if (v < threshUp):
-							topTimes.append(voltageTimestamps[localTopInd])
-							tops.append(localTop)
-							overThreshInd = -1
-
-					elif (underThreshInd > -1):
-						if (v < localTop):
-							localTop = v
-							localTopInd = i
-						if (v > threshLow):
-							topTimes.append(voltageTimestamps[localTopInd])
-							tops.append(localTop)
-							underThreshInd = -1
-
-					elif (v > threshUp and voltages[i-1] <= threshUp):
-						overThreshInd = i
-						localTop = v
-						localTopInd = i
-
-					elif (v < threshLow and voltages[i-1] >= threshLow):
-						underThreshInd = i
-						localTop = v
-						localTopInd = i
-				voltageTops["time"].extend(topTimes)
-				voltageTops["val"].extend(tops)
-
-
-				############################################
-				#          Calculate zero crossings        #
-				############################################
-
-				zeros = []
-				zeroInds = []
-				zeroTimes = []
-				belowMean = -1
-				aboveMean = -1
-				for i in range(1, len(voltages)):
-					v = voltages[i]
-					vPrev = voltages[i-1]
-					if (vPrev < vMean and v >= vMean) or (vPrev > vMean and v <= vMean):
-						zeroTime = voltageTimestamps[i]
-#						zeroTime = (vMean-vPrev)/(v-vPrev)*(voltageTimestamps[i] - voltageTimestamps[i-1])+voltageTimestamps[i-1]
-						zeroTimes.append(zeroTime)
-						zeros.append(vMean)
-						zeroInds.append(i)
-				voltageZeroes["time"].extend(zeroTimes)
-				voltageZeroes["val"].extend(zeros)
-
-
-				voltageTimeBetweenZeroes["val"].extend(np.diff(zeroTimes))
-				voltageTimeBetweenZeroes["time"].extend(zeroTimes[1:])
-
-				voltageTimeBetweenTops["val"].extend(np.diff(topTimes))
-				voltageTimeBetweenTops["time"].extend(topTimes[1:])
-
-
-				####################################
-				#      Calculate power usage       #
-				####################################
-
-#				p=0.0
-#				zeroCurrent = 168.5
-#				zeroVoltage = 169.0
-#				currentMultiplication = 0.044
+# 				#################################
+# 				#     Calculate min and max     #
+# 				#################################
+# 				vMin = 1023
+# 				vMinInd = -1
+# 				vMax = 0
+# 				vMaxInd = -1
+# 				for i in range(0, len(voltages)):
+# 					if (voltages[i] > vMax):
+# 						vMax = voltages[i]
+# 						vMaxInd = i
+# 					if (voltages[i] < vMin):
+# 						vMin = voltages[i]
+# 						vMinInd = i
+# 				vMean = (vMax - vMin)/2.0 + vMin
 #
-#				voltageMultiplication = 2.357
+# 				voltageMinMeanMax["time"].append(voltageTimestamps[0])
+# 				voltageMinMeanMax["min"].append(vMin)
+# 				voltageMinMeanMax["mean"].append(vMean)
+# 				voltageMinMeanMax["max"].append(vMax)
 #
-#				tSum = 0
-#				for i in range(zeroInds[0], zeroInds[-1]+1):
-#					dt = voltageTimestamps[i] - voltageTimestamps[i-1]
-#					dt /= 32768.0
 #
-#					v = (voltages[i] - zeroVoltage)
-#					v *= voltageMultiplication
 #
-#					c = (currents[i] - zeroCurrent)
-#					# # multiplication is lower for lower values...
-#					# if (abs(c) < 20):
-#					# 	currentMultiplication = 15.0 + abs(c)/20.0 * 5.0
-#					c *= currentMultiplication
+# 				cMin = 1023
+# 				cMinInd = -1
+# 				cMax = 0
+# 				cMaxInd = -1
+# 				for i in range(0, len(currents)):
+# 					if (currents[i] > cMax):
+# 						cMax = currents[i]
+# 						cMaxInd = i
+# 					if (currents[i] < cMin):
+# 						cMin = currents[i]
+# 						cMinInd = i
+# 				cMean = (cMax - cMin)/2.0 + cMin
 #
-#					# print v, c, dt
+# 				currentMinMeanMax["time"].append(currentTimestamps[0])
+# 				currentMinMeanMax["min"].append(cMin)
+# 				currentMinMeanMax["mean"].append(cMean)
+# 				currentMinMeanMax["max"].append(cMax)
 #
-#					p += v * c * dt
-#					tSum += dt
 #
-#				p /= tSum
-#				p -= 14
-#				power["time"].append(voltageTimestamps[0])
-#				power["val"].append(p)
-
-				voltageMultiplication = voltageMultiplications["default"]
-				currentMultiplication = currentMultiplications["default"]
-				pZero = pZeros["default"]
-				if (address in voltageMultiplications):
-					voltageMultiplication = voltageMultiplications[address]
-				if (address in currentMultiplications):
-					currentMultiplication = currentMultiplications[address]
-				if (address in pZeros):
-					pZero = pZeros[address]
-
-				tSum = 0.0
-				pSum = 0.0
-				endTime = voltageTimestamps[0] + 20.0*32768/1000
-				for i in range(1, len(voltageTimestamps)):
-					if (voltageTimestamps[i] <= endTime):
-						dt = voltageTimestamps[i] - voltageTimestamps[i-1]
-						dt /= 32768.0
-						v = (voltages[i] - vMean) * voltageMultiplication
-						c = (currents[i] - vMean) * currentMultiplication
-						pSum += v * c * dt
-						tSum += dt
-
-				pSum /= tSum
-				pSum -= pZero
+#
+# 				##################################
+# 				#          Calculate tops        #
+# 				##################################
+#
+# 				############# Config! ############
+# 				threshUp =  vMax - 0.05*(vMax-vMin)
+# 				threshLow = vMin + 0.05*(vMax-vMin)
+# 				##################################
+#
+# 				tops=[]
+# 				topTimes=[]
+# 				overThreshInd = -1
+# 				underThreshInd = -1
+# 				localTop = 0
+# 				localTopInd = -1
+# 				for i in range(1, len(voltages)):
+# 					v = voltages[i]
+# 					# print v, overThreshInd, underThreshInd, localTop, localTopInd
+# 					if (overThreshInd > -1):
+# 						if (v > localTop):
+# 							localTop = v
+# 							localTopInd = i
+# 						if (v < threshUp):
+# 							topTimes.append(voltageTimestamps[localTopInd])
+# 							tops.append(localTop)
+# 							overThreshInd = -1
+#
+# 					elif (underThreshInd > -1):
+# 						if (v < localTop):
+# 							localTop = v
+# 							localTopInd = i
+# 						if (v > threshLow):
+# 							topTimes.append(voltageTimestamps[localTopInd])
+# 							tops.append(localTop)
+# 							underThreshInd = -1
+#
+# 					elif (v > threshUp and voltages[i-1] <= threshUp):
+# 						overThreshInd = i
+# 						localTop = v
+# 						localTopInd = i
+#
+# 					elif (v < threshLow and voltages[i-1] >= threshLow):
+# 						underThreshInd = i
+# 						localTop = v
+# 						localTopInd = i
+# 				voltageTops["time"].extend(topTimes)
+# 				voltageTops["val"].extend(tops)
+#
+#
+# 				############################################
+# 				#          Calculate zero crossings        #
+# 				############################################
+#
+# 				zeros = []
+# 				zeroInds = []
+# 				zeroTimes = []
+# 				belowMean = -1
+# 				aboveMean = -1
+# 				for i in range(1, len(voltages)):
+# 					v = voltages[i]
+# 					vPrev = voltages[i-1]
+# 					if (vPrev < vMean and v >= vMean) or (vPrev > vMean and v <= vMean):
+# 						zeroTime = voltageTimestamps[i]
+# #						zeroTime = (vMean-vPrev)/(v-vPrev)*(voltageTimestamps[i] - voltageTimestamps[i-1])+voltageTimestamps[i-1]
+# 						zeroTimes.append(zeroTime)
+# 						zeros.append(vMean)
+# 						zeroInds.append(i)
+# 				voltageZeroes["time"].extend(zeroTimes)
+# 				voltageZeroes["val"].extend(zeros)
+#
+#
+# 				voltageTimeBetweenZeroes["val"].extend(np.diff(zeroTimes))
+# 				voltageTimeBetweenZeroes["time"].extend(zeroTimes[1:])
+#
+# 				voltageTimeBetweenTops["val"].extend(np.diff(topTimes))
+# 				voltageTimeBetweenTops["time"].extend(topTimes[1:])
+#
+#
+# 				####################################
+# 				#      Calculate power usage       #
+# 				####################################
+#
+# #				p=0.0
+# #				zeroCurrent = 168.5
+# #				zeroVoltage = 169.0
+# #				currentMultiplication = 0.044
+# #
+# #				voltageMultiplication = 2.357
+# #
+# #				tSum = 0
+# #				for i in range(zeroInds[0], zeroInds[-1]+1):
+# #					dt = voltageTimestamps[i] - voltageTimestamps[i-1]
+# #					dt /= 32768.0
+# #
+# #					v = (voltages[i] - zeroVoltage)
+# #					v *= voltageMultiplication
+# #
+# #					c = (currents[i] - zeroCurrent)
+# #					# # multiplication is lower for lower values...
+# #					# if (abs(c) < 20):
+# #					# 	currentMultiplication = 15.0 + abs(c)/20.0 * 5.0
+# #					c *= currentMultiplication
+# #
+# #					# print v, c, dt
+# #
+# #					p += v * c * dt
+# #					tSum += dt
+# #
+# #				p /= tSum
+# #				p -= 14
+# #				power["time"].append(voltageTimestamps[0])
+# #				power["val"].append(p)
+#
+# 				voltageMultiplication = voltageMultiplications["default"]
+# 				currentMultiplication = currentMultiplications["default"]
+# 				pZero = pZeros["default"]
+# 				if (address in voltageMultiplications):
+# 					voltageMultiplication = voltageMultiplications[address]
+# 				if (address in currentMultiplications):
+# 					currentMultiplication = currentMultiplications[address]
+# 				if (address in pZeros):
+# 					pZero = pZeros[address]
+#
+# 				tSum = 0.0
+# 				pSum = 0.0
+# 				endTime = voltageTimestamps[0] + 20.0*32768/1000
+# 				for i in range(1, len(voltageTimestamps)):
+# 					if (voltageTimestamps[i] <= endTime):
+# 						dt = voltageTimestamps[i] - voltageTimestamps[i-1]
+# 						dt /= 32768.0
+# 						v = (voltages[i] - vMean) * voltageMultiplication
+# 						c = (currents[i] - vMean) * currentMultiplication
+# 						pSum += v * c * dt
+# 						tSum += dt
+#
+# 				pSum /= tSum
+# 				pSum -= pZero
+# 				power["time"].append(voltageTimestamps[0])
+# 				power["val"].append(pSum)
+				zero = calculateZero(currents, voltages, 400, 20*1000)
+				avgPower = calculatePower(currents, voltages, 400, 20*1000, zero[0], zero[1])
+				# avgPower = calculatePowerDouble(currents, voltages, 400, 20*1000, zero[0], zero[1])
+				# avgPower = calculateVoltageRMS(voltages, 400, 20*1000, zero[1])
 				power["time"].append(voltageTimestamps[0])
-				power["val"].append(pSum)
+				power["val"].append(avgPower)
+
+				currentZeroes["time"].append(currentTimestamps[0])
+				currentZeroes["val"].append(zero[0]/1000)
+				voltageZeroes["time"].append(voltageTimestamps[0])
+				voltageZeroes["val"].append(zero[1]/1000)
+				currentAverages["time"].append(currentTimestamps[0])
+				currentAverages["val"].append(zero[2]/1000)
+				voltageAverages["time"].append(voltageTimestamps[0])
+				voltageAverages["val"].append(zero[3]/1000)
 
 				# break
 
@@ -360,9 +453,18 @@ if __name__ == '__main__':
 	fig, axes = plt.subplots(nrows=2, sharex=True)
 	# for i in range(0, len(currentSamplesAll)):
 	axes[0].plot(currentTimestampsAll, currentSamplesAll, "o", label="current")
+	axes[0].plot(currentZeroes["time"], currentZeroes["val"], "o", label="zero")
+	axes[0].plot(currentAverages["time"], currentAverages["val"], "o", label="avg")
+	axes[0].legend()
+
 	axes[1].plot(voltageTimestampsAll, voltageSamplesAll, "o", label="voltage")
-	axes[1].plot(voltageTops["time"], voltageTops["val"], "rv", label="tops")
-	axes[1].plot(voltageZeroes["time"], voltageZeroes["val"], "gv", label="zero crossings")
+#	axes[1].plot(voltageTops["time"], voltageTops["val"], "rv", label="tops")
+#	axes[1].plot(voltageZeroes["time"], voltageZeroes["val"], "gv", label="zero crossings")
+	axes[1].plot(voltageZeroes["time"], voltageZeroes["val"], "o", label="zero")
+	axes[1].plot(voltageAverages["time"], voltageAverages["val"], "o", label="avg")
+	axes[1].legend()
+
+
 	# axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["min"], "o", label="min")
 	# axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["mean"], "o", label="mean")
 	# axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["max"], "o", label="max")
@@ -372,27 +474,27 @@ if __name__ == '__main__':
 #	axes[3].plot(voltageTimeBetweenTops["time"], np.array(voltageTimeBetweenTops["val"]) / 32.7680, "o", label="time between tops")
 #	axes[2].plot(voltageDiffAll["time"], voltageDiffAll["val"], "o", label="voltage diff")
 
+	# plt.figure()
+	# plt.plot(range(0, len(voltageMinMeanMax["min"])), voltageMinMeanMax["min"], label="Vmin")
+	# plt.plot(range(0, len(voltageMinMeanMax["mean"])), voltageMinMeanMax["mean"], label="Vmean")
+	# plt.plot(range(0, len(voltageMinMeanMax["max"])), voltageMinMeanMax["max"], label="Vmax")
+	# plt.legend()
+	# plt.title(options.data_file)
+	#
+	# plt.figure()
+	# plt.plot(range(0, len(currentMinMeanMax["min"])), currentMinMeanMax["min"], label="Imin")
+	# plt.plot(range(0, len(currentMinMeanMax["mean"])), currentMinMeanMax["mean"], label="Imean")
+	# plt.plot(range(0, len(currentMinMeanMax["max"])), currentMinMeanMax["max"], label="Imax")
+	# plt.legend()
+	# plt.title(options.data_file)
+
+	# plt.figure()
+	# plt.plot(power["time"], np.array(power["val"]), "ro", label="power (W)")
+	# plt.legend()
+	# plt.title(options.data_file)
+
 	plt.show()
 	exit(0)
-
-	plt.figure()
-	plt.plot(range(0, len(voltageMinMeanMax["min"])), voltageMinMeanMax["min"], label="Vmin")
-	plt.plot(range(0, len(voltageMinMeanMax["mean"])), voltageMinMeanMax["mean"], label="Vmean")
-	plt.plot(range(0, len(voltageMinMeanMax["max"])), voltageMinMeanMax["max"], label="Vmax")
-	plt.legend()
-	plt.title(options.data_file)
-
-	plt.figure()
-	plt.plot(range(0, len(currentMinMeanMax["min"])), currentMinMeanMax["min"], label="Imin")
-	plt.plot(range(0, len(currentMinMeanMax["mean"])), currentMinMeanMax["mean"], label="Imean")
-	plt.plot(range(0, len(currentMinMeanMax["max"])), currentMinMeanMax["max"], label="Imax")
-	plt.legend()
-	plt.title(options.data_file)
-
-	plt.figure()
-	plt.plot(power["time"], np.array(power["val"]), "ro", label="power (W)")
-	plt.legend()
-	plt.title(options.data_file)
 
 	plt.figure()
 	dts = np.diff(np.array(voltageTimestampsAll))
