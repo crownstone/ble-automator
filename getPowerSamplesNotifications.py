@@ -57,6 +57,7 @@ if __name__ == '__main__':
 		exit(1)
 
 	dataPacket = []
+	startFound = False
 	while True:
 		notification = ble.waitForNotification(1.0)
 		if (notification):
@@ -68,16 +69,22 @@ if __name__ == '__main__':
 			if (opCode == 0): # First part of the packet
 				startTime = time.time()
 				dataPacket = []
+				startFound = True
 
-			dataPacket.extend(arr[1:])
-			if (opCode == 255): # Last part of the packet
-				print "Read", len(dataPacket), "B in", time.time()-startTime, "s"
+			if (startFound):
+				dataPacket.extend(arr[1:])
+				
+				if (opCode == 255): # Last part of the packet
+					print "Read", len(dataPacket), "B in", time.time()-startTime, "s"
 
-				line = str(time.time())
-				line += " " + options.address
-				line += " " + str(datetime.datetime.now())
-				line += " " + " ".join(str(x) for x in dataPacket)
-				print line
+					line = str(time.time())
+					line += " " + options.address
+					line += " " + str(datetime.datetime.now())
+					line += " " + " ".join(str(x) for x in dataPacket)
+					print line
+					startFound = False
+			else:
+				print "Start not found!"
 
 	# ble.disconnect()
 
