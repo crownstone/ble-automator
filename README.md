@@ -42,9 +42,10 @@ Prior to running, install:
   * `python setup.py build`
   * `sudo python setup.py install`
 * intelhex
+* matplotlib
 
 ```
-sudo apt-get install bluez python-pip
+sudo apt-get install bluez python-pip python-matplotlib
 sudo pip install pexpect
 sudo pip install intelhex --allow-unverified intelhex
 sudo pip install pycrypto
