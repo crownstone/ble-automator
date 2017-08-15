@@ -34,6 +34,11 @@ if __name__ == '__main__':
 				dest="verbose",
 				help='Be verbose.'
 				)
+		parser.add_option('-e', '--encryption',
+				action='store_true',
+				dest="encryption",
+				help='Use encryption.'
+				)
 
 		options, args = parser.parse_args()
 
@@ -46,6 +51,10 @@ if __name__ == '__main__':
 	if (options.address):
 		targets = [options.address]
 
+	adminKey = "adminKeyForCrown"
+	memberKey = "memberKeyForHome"
+	guestKey = "guestKeyForGirls"
+
 class ScanDelegate(bluepy.btle.DefaultDelegate):
 	def __init__(self):
 		bluepy.btle.DefaultDelegate.__init__(self)
@@ -57,26 +66,33 @@ class ScanDelegate(bluepy.btle.DefaultDelegate):
 				print "type:", adtype, "description:", desc
 				if (adtype == 22): # ServiceData
 					serviceData = Conversion.hex_string_to_uint8_array(value)
-					print "Service data:", list(serviceData)
+
+					if (options.encryption):
+						decryptedServiceData = serviceData[0:3]
+						decryptedServiceData.extend(Bluenet.decryptEcb(serviceData[3:], guestKey))
+					else:
+						decryptedServiceData = serviceData
+
+					print "Service data:", list(decryptedServiceData)
 
 					ind = 0
-					uuid = Conversion.uint8_array_to_uint16(serviceData[ind:ind+2])
+					uuid = Conversion.uint8_array_to_uint16(decryptedServiceData[ind:ind+2])
 					ind += 2
-					protocolVersion = serviceData[ind]
+					protocolVersion = decryptedServiceData[ind]
 					ind += 1
-					crownstoneId = Conversion.uint8_array_to_uint16(serviceData[ind:ind+2])
+					crownstoneId = Conversion.uint8_array_to_uint16(decryptedServiceData[ind:ind+2])
 					ind += 2
-					switchState = serviceData[ind]
+					switchState = decryptedServiceData[ind]
 					ind += 1
-					eventBitmask = serviceData[ind]
+					eventBitmask = decryptedServiceData[ind]
 					ind += 1
-					temperature = Conversion.uint8_to_int8(serviceData[ind])
+					temperature = Conversion.uint8_to_int8(decryptedServiceData[ind])
 					ind += 1
-					powerUsage = Conversion.uint8_array_to_uint32(serviceData[ind:ind+4])
+					powerUsage = Conversion.uint32_to_int32(Conversion.uint8_array_to_uint32(decryptedServiceData[ind:ind+4]))
 					ind += 4
-					energyUsage = Conversion.uint8_array_to_uint32(serviceData[ind:ind+4])
+					energyUsage = Conversion.uint32_to_int32(Conversion.uint8_array_to_uint32(decryptedServiceData[ind:ind+4]))
 					ind += 4
-					randNr = list(serviceData[ind:ind+3])
+					randNr = list(decryptedServiceData[ind:ind+3])
 					ind += 3
 
 					print "UUID:", uuid # Crownstone uuid = 49153, Guidestone uuid = 49154
