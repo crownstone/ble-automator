@@ -1,2 +1,2 @@
 #!/bin/bash
-./sendCommand.py -t 4 "$@"
+./sendCommand.py -n -s1 -t4 "$@"

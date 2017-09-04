@@ -1,2 +1,2 @@
 #!/bin/bash
-./setPwm.sh -d 100 -s 1 "$@"
+./setSwitch.sh -d100 "$@"

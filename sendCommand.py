@@ -119,6 +119,8 @@ if __name__ == '__main__':
 	if (not ble.connect(options.address)):
 		exit(1)
 
+	# Example keys:
+	adminKey = "61646d696e4b6579466f7243726f776e".decode("hex") # When getting the keys from the cloud, they need to be decoded.
 	adminKey = "adminKeyForCrown"
 	memberKey = "memberKeyForHome"
 	guestKey = "guestKeyForGirls"
