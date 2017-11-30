@@ -1,16 +1,24 @@
 # Python binary: ble-automator
 
-Automate interactions with a BLE device.
+Automate interactions with a Crownstone device.
 
 ## Usage
+
+There are two way to interact with the Crownstones: 1) through connections, 2) through reading advertisements. Both
+the connections as well as the advertisements are normally encrypted. 
+
+### Key setup
 
 The file `bleAutomator.py` contains some functions to write and read data to a Crownstone and some general BLE devices.
 
 Currently you first have to use encryption by filling in your keys.
 
-To get your keys, log in to the [cloud](https://cloud.crownstone.rocks/), then fill in the token at the [API explorer](https://cloud.crownstone.rocks/explorer).
-After that, get your user id, with a [GET on /users/me](https://cloud.crownstone.rocks/explorer/#!/user/user_me).
-Finally, get your keys with a [GET on /users/{id}/keys](https://cloud.crownstone.rocks/explorer/#!/user/user_getEncryptionKeys).
+To get your keys, you will now have to go through a couple of steps.
+
+1. Log in to the [cloud](https://cloud.crownstone.rocks/). You will get a authentication token.
+2. Fill in the token at the top of the [API explorer](https://cloud.crownstone.rocks/explorer).
+3. Get your user id at the `user` section (at the bottom), with a [GET on /user/me](https://cloud.crownstone.rocks/explorer/#!/user/user_me).
+4. Get your keys with a [GET on /users/{id}/keys](https://cloud.crownstone.rocks/explorer/#!/user/user_getEncryptionKeys).
 
 Copy the default file `config.public.json` to `config.json` (the latter is the default used by the scripts):
 
@@ -30,6 +38,12 @@ Then fill in the address and keys:
       }
     }
 
+There is an [issue](https://github.com/crownstone/ble-automator/issues/3) to automate this process partly. However, if 
+you really want to authorize properly for your users, we recommend to use oauth. Subsequently your application needs 
+to have some structure to be able to have a user select the proper device they want to control.
+
+### Make connection
+
 The send command script is most versatile. For example, to turn on a crownstone:
 
     ./sendCommand.py -i hci0 -a 00:11:22:33:44:55 -v -e -t 0 -d 100 -n -s 1
@@ -40,6 +54,10 @@ Some explanation:
 - `-d 100` for value 100.
 - `-n` interpret value as a number.
 - `-s 1` size of the value is 1 byte.
+- `-e` means that encryption is enabled
+- `-a` is the BLE address to connect to
+
+### Parse advertisement data
 
 To get data from advertisements:
 
