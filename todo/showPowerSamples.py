@@ -88,7 +88,8 @@ if __name__ == '__main__':
 
 
 	def calculateZero(currentSamples, voltageSamples, sampleIntervalUs, acPeriodUs):
-		numSamples = acPeriodUs / sampleIntervalUs
+		#numSamples = acPeriodUs / sampleIntervalUs
+		numSamples = len(voltageSamples)
 		vMin = 2**15 - 1 # int16_max
 		vMax = -1*vMin-1 # int16_min
 		vSum = 0
@@ -180,7 +181,11 @@ if __name__ == '__main__':
 				continue
 			currents = Conversion.uint8_array_to_uint16_array(powerSamplesStruct[ind:ind + currentSamplesLength * 2])
 			ind += currentSamplesLength*2
-			# print currents
+
+			# Correct for overflow
+			for i in range(0, currentSamplesLength):
+				if (currents[i] >= 2**15):
+					currents[i] -= (2**16)
 
 			voltageSamplesLength = Conversion.uint8_array_to_uint16(powerSamplesStruct[ind:ind+2])
 			ind += 2
@@ -190,7 +195,11 @@ if __name__ == '__main__':
 				continue
 			voltages = Conversion.uint8_array_to_uint16_array(powerSamplesStruct[ind:ind + voltageSamplesLength * 2])
 			ind += voltageSamplesLength*2
-			# print voltages
+
+			# Correct for overflow
+			for i in range(0, voltageSamplesLength):
+				if (voltages[i] >= 2**15):
+					voltages[i] -= (2**16)
 
 			currentTimestampsLength = Conversion.uint8_array_to_uint16(powerSamplesStruct[ind:ind+2])
 			ind += 2
@@ -248,46 +257,46 @@ if __name__ == '__main__':
 				voltageDiffAll["val"].extend(voltageDiff)
 				voltageDiffAll["time"].extend(voltageDiffTime)
 
-# 				#################################
-# 				#     Calculate min and max     #
-# 				#################################
-# 				vMin = 1023
-# 				vMinInd = -1
-# 				vMax = 0
-# 				vMaxInd = -1
-# 				for i in range(0, len(voltages)):
-# 					if (voltages[i] > vMax):
-# 						vMax = voltages[i]
-# 						vMaxInd = i
-# 					if (voltages[i] < vMin):
-# 						vMin = voltages[i]
-# 						vMinInd = i
-# 				vMean = (vMax - vMin)/2.0 + vMin
-#
-# 				voltageMinMeanMax["time"].append(voltageTimestamps[0])
-# 				voltageMinMeanMax["min"].append(vMin)
-# 				voltageMinMeanMax["mean"].append(vMean)
-# 				voltageMinMeanMax["max"].append(vMax)
-#
-#
-#
-# 				cMin = 1023
-# 				cMinInd = -1
-# 				cMax = 0
-# 				cMaxInd = -1
-# 				for i in range(0, len(currents)):
-# 					if (currents[i] > cMax):
-# 						cMax = currents[i]
-# 						cMaxInd = i
-# 					if (currents[i] < cMin):
-# 						cMin = currents[i]
-# 						cMinInd = i
-# 				cMean = (cMax - cMin)/2.0 + cMin
-#
-# 				currentMinMeanMax["time"].append(currentTimestamps[0])
-# 				currentMinMeanMax["min"].append(cMin)
-# 				currentMinMeanMax["mean"].append(cMean)
-# 				currentMinMeanMax["max"].append(cMax)
+				#################################
+				#     Calculate min and max     #
+				#################################
+				vMin = 2**15
+				vMinInd = -1
+				vMax = -2**15
+				vMaxInd = -1
+				for i in range(0, len(voltages)):
+					if (voltages[i] > vMax):
+						vMax = voltages[i]
+						vMaxInd = i
+					if (voltages[i] < vMin):
+						vMin = voltages[i]
+						vMinInd = i
+				vMean = (vMax - vMin)/2.0 + vMin
+
+				voltageMinMeanMax["time"].append(voltageTimestamps[0])
+				voltageMinMeanMax["min"].append(vMin)
+				voltageMinMeanMax["mean"].append(vMean)
+				voltageMinMeanMax["max"].append(vMax)
+
+
+
+				cMin = 2**15
+				cMinInd = -1
+				cMax = -2**15
+				cMaxInd = -1
+				for i in range(0, len(currents)):
+					if (currents[i] > cMax):
+						cMax = currents[i]
+						cMaxInd = i
+					if (currents[i] < cMin):
+						cMin = currents[i]
+						cMinInd = i
+				cMean = (cMax - cMin)/2.0 + cMin
+
+				currentMinMeanMax["time"].append(currentTimestamps[0])
+				currentMinMeanMax["min"].append(cMin)
+				currentMinMeanMax["mean"].append(cMean)
+				currentMinMeanMax["max"].append(cMax)
 #
 #
 #
@@ -464,10 +473,12 @@ if __name__ == '__main__':
 	axes[1].plot(voltageAverages["time"], voltageAverages["val"], "o", label="avg")
 	axes[1].legend()
 
-
-	# axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["min"], "o", label="min")
+	axes[0].plot(currentMinMeanMax["time"], currentMinMeanMax["min"], "o", label="min")
+	# axes[0].plot(currentMinMeanMax["time"], currentMinMeanMax["mean"], "o", label="mean")
+	axes[0].plot(currentMinMeanMax["time"], currentMinMeanMax["max"], "o", label="max")
+	axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["min"], "o", label="min")
 	# axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["mean"], "o", label="mean")
-	# axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["max"], "o", label="max")
+	axes[1].plot(voltageMinMeanMax["time"], voltageMinMeanMax["max"], "o", label="max")
 #	axes[2].plot(voltageTimeBetweenZeroes["time"], np.array(voltageTimeBetweenZeroes["val"]) / 32.7680, "o", label="time between zero crossings")
 	axes[0].set_title(options.data_file)
 
