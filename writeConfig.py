@@ -120,7 +120,7 @@ if __name__ == '__main__':
 	# Connect to peer device.
 	print "Connect to Bluetooth Low Energy device at address " + options.address
 	if (not ble.connect(options.address)):
-		print "Do not connect too often! Connections needs to be correctly broken off at the OS level."
+		print "Tip: do not connect too often! Connections needs to be correctly broken off at the OS level."
 		exit(1)
 
 	# First byte is the type

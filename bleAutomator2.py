@@ -49,6 +49,7 @@ class BleAutomator(object):
 		try:
 			self.connection.connect(self.targetAddress, bluepy.btle.ADDR_TYPE_RANDOM, self.interface)
 		except bluepy.btle.BTLEException, e:
+			print "Failed to connect:"
 			print e
 			return False
 
