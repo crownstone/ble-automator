@@ -61,6 +61,11 @@ if __name__ == '__main__':
 				dest="as_array",
 				help='Read value as array (hex), not as string'
 				)
+		parser.add_option('-s', '--setup',
+				action='store_true',
+				dest="viaSetup",
+				help='Read from crownstone in setup mode'
+			  )
 
 		options, args = parser.parse_args()
 
@@ -79,6 +84,8 @@ if __name__ == '__main__':
 	if (not ble.connect(options.address)):
 		exit(1)
 
+	ble.getHandles()
+	time.sleep(1)
 
 	adminKey = "adminKeyForCrown"
 	memberKey = "memberKeyForHome"
@@ -86,17 +93,32 @@ if __name__ == '__main__':
 
 	sessionNonce = None
 	validationKey = None
+	sessionKey = None
 	if (options.encryption):
-		sessionPacket = ble.readCharacteristic(CHAR_SESSION_NONCE)
-		sessionPacket = Bluenet.decryptEcb(sessionPacket, guestKey)
-		sessionNonce = sessionPacket[ENCRYPTION_VALIDATION_KEY_LENGTH : ENCRYPTION_VALIDATION_KEY_LENGTH+ENCRYPTION_SESSION_NONCE_LENGTH]
-		validationKey = sessionPacket[ENCRYPTION_VALIDATION_KEY_LENGTH : ENCRYPTION_VALIDATION_KEY_LENGTH+ENCRYPTION_VALIDATION_KEY_LENGTH]
+		if (options.viaSetup):
+			sessionPacket = ble.readCharacteristic(CHAR_SETUP_SESSION_NONCE)
+			sessionNonce = sessionPacket[0 : ENCRYPTION_SESSION_NONCE_LENGTH]
+			validationKey = sessionPacket[0 : ENCRYPTION_VALIDATION_KEY_LENGTH]
+		else:
+			sessionPacket = ble.readCharacteristic(CHAR_SESSION_NONCE)
+			sessionPacket = Bluenet.decryptEcb(sessionPacket, guestKey)
+			sessionNonce = sessionPacket[ENCRYPTION_VALIDATION_KEY_LENGTH : ENCRYPTION_VALIDATION_KEY_LENGTH+ENCRYPTION_SESSION_NONCE_LENGTH]
+			validationKey = sessionPacket[ENCRYPTION_VALIDATION_KEY_LENGTH : ENCRYPTION_VALIDATION_KEY_LENGTH+ENCRYPTION_VALIDATION_KEY_LENGTH]
+
+		if (options.viaSetup):
+			arr8 = ble.readCharacteristic(CHAR_SETUP_KEY)
+			if (not arr8):
+				print "Couldn't read session key"
+				exit(1)
+			sessionKey = arr8
+			print "sessionKey:", list(sessionKey)
 
 		if (options.verbose):
-			print "CAFEBABE:", list(sessionPacket[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
-			print CAFEBABE, " = ", Conversion.uint8_array_to_uint32(sessionPacket[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
 			print "sessionNonce:", list(sessionNonce)
 			print "validationKey:", list(validationKey)
+			if (not options.viaSetup):
+				print "CAFEBABE:", list(sessionPacket[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
+				print CAFEBABE, " = ", Conversion.uint8_array_to_uint32(sessionPacket[0:ENCRYPTION_VALIDATION_KEY_LENGTH])
 
 
 	# Write type to select, first byte is the type, second byte is the
@@ -104,7 +126,12 @@ if __name__ == '__main__':
 	arr8 = [options.configType, ValueOpCode.READ_VALUE]
 	
 	if (options.viaSetup):
-		if (not ble.writeCharacteristic(CHAR_SETUP_CONFIG_CONTROL, arr8)):
+		if (options.encryption):
+			encryptedArr8 = Bluenet.encryptCtr(arr8, sessionNonce, validationKey, sessionKey, EncryptionAccessLevel.SETUP, options.verbose)
+		else:
+			encryptedArr8 = arr8
+
+		if (not ble.writeCharacteristic(CHAR_SETUP_CONFIG_CONTROL, encryptedArr8)):
 			exit(1)
 	else:
 		if (options.encryption):
@@ -129,7 +156,10 @@ if __name__ == '__main__':
 		exit(1)
 
 	if (options.encryption):
-		decryptedArr8 = Bluenet.decryptCtr(arr8, sessionNonce, validationKey, adminKey, memberKey, guestKey, options.verbose)
+		if (options.viaSetup):
+			decryptedArr8 = Bluenet.decryptCtr(arr8, sessionNonce, validationKey, sessionKey, memberKey, guestKey, options.verbose)
+		else:
+			decryptedArr8 = Bluenet.decryptCtr(arr8, sessionNonce, validationKey, adminKey, memberKey, guestKey, options.verbose)
 	else:
 		decryptedArr8 = arr8
 

@@ -350,7 +350,7 @@ class Bluenet:
 			return None
 
 		packetNonce = bytearray(Crypto.Random.get_random_bytes(3))
-		packetNonce = bytearray([99, 149, 150])
+#		packetNonce = bytearray([99, 149, 150])
 		if (verbose):
 			print "packetNonce:", list(packetNonce)
 
@@ -425,7 +425,7 @@ class Bluenet:
 			print "accessLevel:", accessLevel
 
 		key = bytearray()
-		if (accessLevel == EncryptionAccessLevel.ADMIN):
+		if (accessLevel == EncryptionAccessLevel.ADMIN or accessLevel == EncryptionAccessLevel.SETUP):
 			key = adminkey
 		elif (accessLevel == EncryptionAccessLevel.MEMBER):
 			key = memberkey
