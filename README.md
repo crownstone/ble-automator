@@ -1,11 +1,8 @@
-ble-automator
-======================================
+# Python binary: ble-automator
+
 Automate interactions with a BLE device.
 
-Some of the scripts have hardcoded addresses.
-
-
-## How to use:
+## Usage
 
 The file `bleAutomator.py` contains some functions to write and read data to a Crownstone and some general BLE devices.
 
@@ -53,20 +50,11 @@ To get the correct data, you need the correct key, or else the data will be scra
 Also note that a message like `Failed to execute mgmt cmd 'le on'` means that you need superuser rights to scan for
 BLE devices. Run the above with `sudo`.
 
-### How to use the Powermate
-
-To run the script that connects with the PowerMate button, you will first need to add it:
+It might also help to add the address through `hcitool`
 
     sudo hcitool lewladd 00:12:92:08:05:16
 
-If you set a random address for yourself, with for example `-t random` as argument you will need to do this again. Or else you will encounter this error:
-
-    [   ][00:12:92:08:05:16][LE]> connect
-    Connecting... connect error: Transport endpoint is not connected (107)
-
-During the connection attempt you will have to press the button!
-
-## Prerequisite:
+## Prerequisites
 
 Prior to running, install:
 
@@ -82,6 +70,8 @@ Prior to running, install:
 * intelhex
 * matplotlib
 
+On Ubuntu this can be installed through:
+
 ```
 sudo apt-get install bluez python-pip python-matplotlib
 sudo pip install pexpect
@@ -89,9 +79,11 @@ sudo pip install intelhex --allow-unverified intelhex
 sudo pip install pycrypto
 ```
 
-======================================
+# Advanced features
 
-## Create .zip file for Nordic app
+## Create firmware
+
+To create .zip file for the Nordic app to upload new firmware, we will have to wrap a `crownstone.hex` file. 
 
 The following will create a .zip file with a .bin binary, a Manifest file and a .dat file.
 
