@@ -4,6 +4,7 @@ __author__ = 'Bart van Vliet'
 
 
 from bleAutomator2 import *
+import ConfigUtils
 from ConversionUtils import *
 from Bluenet import *
 import struct
@@ -66,6 +67,17 @@ if __name__ == '__main__':
 				dest="viaSetup",
 				help='Read from crownstone in setup mode'
 			  )
+		parser.add_option('-c', '--configuration-file',
+				action='store',
+				dest="configFile",
+				default="config.json",
+				help='Config file (json).'
+				)
+		parser.add_option('-p', '--setup',
+				action='store_true',
+				dest="viaSetup",
+				help='Write value setup'
+				)
 
 		options, args = parser.parse_args()
 
@@ -79,17 +91,23 @@ if __name__ == '__main__':
 		exit(2)
 
 	ble = BleAutomator(options.interface, options.verbose)
+	
+	keys = ConfigUtils.readKeys(options.configFile)
+	if (not keys):
+		print "Could not find keys in the config file: " + options.configFile
+		sys.exit(1)
+
+	print "Gotten keys from the config file"
+	adminKey = keys["admin"].decode("hex")	
+	memberKey = keys["member"].decode("hex")	
+	guestKey = keys["guest"].decode("hex")	
 
 	# Connect to peer device.
+	print "Connect to Bluetooth Low Energy device at address " + options.address
 	if (not ble.connect(options.address)):
+		print "Failed to connect."
+		print "Do not connect too often! Connections needs to be correctly broken off at the OS level."
 		exit(1)
-
-	ble.getHandles()
-	time.sleep(1)
-
-	adminKey = "adminKeyForCrown"
-	memberKey = "memberKeyForHome"
-	guestKey = "guestKeyForGirls"
 
 	sessionNonce = None
 	validationKey = None
