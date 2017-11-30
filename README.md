@@ -32,7 +32,7 @@ Then fill in the address and keys:
 
 The send command script is most versatile. For example, to turn on a crownstone:
 
-    ./sendCommand.py -i hci0 -a 00:11:22:33:44:55 -v -e -t 0 -d 100 -n -s 1
+    ./sendCommand.py -i hci0 -a "00:11:22:33:44:55" -v -e -t 0 -d 100 -n -s 1
 
 Some explanation:
 
@@ -43,7 +43,7 @@ Some explanation:
 
 To get data from advertisements:
 
-    ./getAdvertisements.py -i hci0 -a 00:11:22:33:44:55 -v -e
+    ./getAdvertisements.py -i hci0 -a "00:11:22:33:44:55" -v -e
 
 To get the correct data, you need the correct key, or else the data will be scrambled!
 
@@ -52,7 +52,7 @@ BLE devices. Run the above with `sudo`.
 
 It might also help to add the address through `hcitool`
 
-    sudo hcitool lewladd 00:12:92:08:05:16
+    sudo hcitool lewladd "00:11:22:33:44:55"
 
 ## Prerequisites
 
