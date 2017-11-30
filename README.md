@@ -9,7 +9,7 @@ the connections as well as the advertisements are normally encrypted.
 
 ### Key setup
 
-The file `bleAutomator.py` contains some functions to write and read data to a Crownstone and some general BLE devices.
+The file `bleAutomator2.py` contains some functions to write and read data to a Crownstone and some general BLE devices.
 
 Currently you first have to use encryption by filling in your keys.
 
