@@ -92,7 +92,7 @@ if __name__ == '__main__':
 		print "Could not find keys in the config file: " + options.configFile
 		sys.exit(1)
 
-	print "Admin key: " + keys["admin"]
+	print "Gotten keys from the config file"
 	adminKey = keys["admin"].decode("hex")	
 	memberKey = keys["member"].decode("hex")	
 	guestKey = keys["guest"].decode("hex")	

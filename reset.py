@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 __author__ = 'Bart van Vliet'
 
-
 from bleAutomator2 import *
 from Bluenet import *
+import ConfigUtils
 
 if __name__ == '__main__':
 	try:
@@ -52,14 +52,22 @@ if __name__ == '__main__':
 		exit(2)
 
 	ble = BleAutomator(options.interface, options.verbose)
+	
+	# Get keys
+	keys = ConfigUtils.readKeys(options.configFile)
+	if (not keys):
+		print "Could not find keys in the config file: " + options.configFile
+		sys.exit(1)
+
+	adminKey = keys["admin"].decode("hex")	
+	memberKey = keys["member"].decode("hex")	
+	guestKey = keys["guest"].decode("hex")	
 
 	# Connect to peer device.
+	print "Connect to Bluetooth Low Energy device at address " + options.address
 	if (not ble.connect(options.address)):
+		print "Do not connect too often! Connections needs to be correctly broken off at the OS level."
 		exit(1)
-
-	adminKey = "adminKeyForCrown"
-	memberKey = "memberKeyForHome"
-	guestKey = "guestKeyForGirls"
 
 	sessionNonce = None
 	validationKey = None

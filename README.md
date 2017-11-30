@@ -7,19 +7,31 @@ Some of the scripts have hardcoded addresses.
 
 ## How to use:
 
-The file bleAutomator.py contains handy function to write and read data to a BLE device.
+The file `bleAutomator.py` contains some functions to write and read data to a Crownstone and some general BLE devices.
 
 Currently you first have to use encryption by filling in your keys.
 
-To get your keys, log in to the [cloud](https://cloud.crownstone.rocks/), then fill in the token at the [API explorer](https://crownstone-cloud.herokuapp.com/explorer).
-After that, get your user id, with a [GET on /users/me](https://crownstone-cloud.herokuapp.com/explorer/#!/user/user_me).
-Finally, get your keys with a [GET on /users/{id}/keys](https://crownstone-cloud.herokuapp.com/explorer/#!/user/user_getEncryptionKeys).
+To get your keys, log in to the [cloud](https://cloud.crownstone.rocks/), then fill in the token at the [API explorer](https://cloud.crownstone.rocks/explorer).
+After that, get your user id, with a [GET on /users/me](https://cloud.crownstone.rocks/explorer/#!/user/user_me).
+Finally, get your keys with a [GET on /users/{id}/keys](https://cloud.crownstone.rocks/explorer/#!/user/user_getEncryptionKeys).
 
-Then fill in the keys in the scripts, like so:
+Copy the default file `config.public.json` to `config.json` (the latter is the default used by the scripts):
 
-    adminKey  = "61646d696e4b6579466f7243726f776e".decode("hex")
-    memberKey = "6d656d6265724b6579466f72486f6d65".decode("hex")
-    guestKey  = "67756573744b6579466f724769726c73".decode("hex")
+    cp config.public.json config.json
+
+Then fill in the address and keys:
+
+      {
+	"addresses":[
+	  "XX:XX:XX:XX:XX:XX"
+	],
+	"sphereId": "1234abcd1234abcd1234abcd",
+	"keys": {
+	  "admin": "1234abcd1234abcd1234abcd1234abcd",
+	  "member": "1234abcd1234abcd1234abcd1234abcd",
+	  "guest": "1234abcd1234abcd1234abcd1234abcd"
+	}
+      }
 
 The send command script is most versatile. For example, to turn on a crownstone:
 
@@ -32,13 +44,14 @@ Some explanation:
 - `-n` interpret value as a number.
 - `-s 1` size of the value is 1 byte.
 
-
-
 To get data from advertisements:
 
     ./getAdvertisements.py -i hci0 -a 00:11:22:33:44:55 -v -e
 
-To get the correct data, you need the correct key.
+To get the correct data, you need the correct key, or else the data will be scrambled!
+
+Also note that a message like `Failed to execute mgmt cmd 'le on'` means that you need superuser rights to scan for
+BLE devices. Run the above with `sudo`.
 
 ### How to use the Powermate
 

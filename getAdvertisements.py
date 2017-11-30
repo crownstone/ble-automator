@@ -6,6 +6,7 @@ import bluepy.btle
 from bleAutomator2 import *
 from Bluenet import *
 from ConversionUtils import *
+import ConfigUtils
 #import matplotlib.pyplot as plt
 #import random
 #import numpy as np
@@ -39,6 +40,12 @@ if __name__ == '__main__':
 				dest="encryption",
 				help='Use encryption.'
 				)
+		parser.add_option('-c', '--configuration-file',
+				action='store',
+				dest="configFile",
+				default="config.json",
+				help='Config file (json).'
+				)
 
 		options, args = parser.parse_args()
 
@@ -50,12 +57,17 @@ if __name__ == '__main__':
 	targets = []
 	if (options.address):
 		targets = [options.address]
+	
+	# Get keys
+	keys = ConfigUtils.readKeys(options.configFile)
+	if (not keys):
+		print "Could not find keys in the config file: " + options.configFile
+		sys.exit(1)
 
-	# Example keys:
-	adminKey = "61646d696e4b6579466f7243726f776e".decode("hex") # When getting the keys from the cloud, they need to be decoded.
-	adminKey = "adminKeyForCrown"
-	memberKey = "memberKeyForHome"
-	guestKey = "guestKeyForGirls"
+	adminKey = keys["admin"].decode("hex")	
+	memberKey = keys["member"].decode("hex")	
+	guestKey = keys["guest"].decode("hex")	
+
 
 class ScanDelegate(bluepy.btle.DefaultDelegate):
 	def __init__(self):
