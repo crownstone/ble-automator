@@ -32,14 +32,14 @@ def readKeys(filename):
 	"""
 	if not os.path.exists(filename):
 		print "Config file does not seem to exist"
-		return [];
+		return []
 	try:
 		configFile = open(filename)
 		config = json.load(configFile)
 	except Exception, e:
 		print "Could not open/parse config file: %s" % (filename)
 		print e
-		return [];
+		return []
 	return config["keys"]
 
 
