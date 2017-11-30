@@ -113,6 +113,7 @@ class BleAutomator(object):
 		:type uuid: str
 		:rtype: bytearray
 		"""
+		print "read char", uuid
 		handle = self.getHandle(uuid)
 		if not handle:
 			print "no such handle"
@@ -120,6 +121,7 @@ class BleAutomator(object):
 		try:
 			data = self.connection.readCharacteristic(handle)
 		except bluepy.btle.BTLEException, e:
+			print "failed to read char", uuid
 			print e
 			return []
 		return bytearray(data)
@@ -133,8 +135,10 @@ class BleAutomator(object):
 		:type data: bytearray | List
 		:rtype: bool
 		"""
+		print "write char", uuid
 		handle = self.getHandle(uuid)
 		if not handle:
+			print "no such handle"
 			return False
 		return self.writeCharacteristicHandle(handle, data)
 
@@ -150,6 +154,7 @@ class BleAutomator(object):
 		try:
 			self.connection.writeCharacteristic(handle, bytearray(data), True)
 		except bluepy.btle.BTLEException, e:
+			print "failed to write:"
 			print e
 			return False
 		return True
@@ -158,20 +163,3 @@ class BleAutomator(object):
 		if (self.connection.waitForNotifications(timeMs)):
 			return {"handle":self.delegate.handle, "data":bytearray(self.delegate.data)}
 
-
-if __name__ == '__main__':
-	ble = BleAutomator("hci1")
-#	ble.connect("E7:64:B5:70:AC:25")
-	ble.connect("E7:87:47:1F:B3:7C")
-	ble.getHandles()
-
-	ble.writeCharacteristic("5b8d0002-6f20-11e4-b116-123b93f75cba", [3])
-	time.sleep(1)
-	curve = ble.readCharacteristic("5b8d0003-6f20-11e4-b116-123b93f75cba") # Power curve
-	print "lenght:", len(curve)
-	print "data:", curve[0], curve[1], curve[2], curve[3], "..."
-
-	temp = ble.readCharacteristic("f5f90001-59f9-11e4-aa15-123b93f75cba") # temperature
-	print "temperature:", temp[0]
-	time.sleep(1)
-	ble.disconnect()
