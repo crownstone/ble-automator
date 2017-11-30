@@ -23,13 +23,13 @@ Then fill in the address and keys:
 
     {
       "addresses":[
-	"XX:XX:XX:XX:XX:XX"
+        "XX:XX:XX:XX:XX:XX"
       ],
       "sphereId": "1234abcd1234abcd1234abcd",
       "keys": {
-	"admin": "1234abcd1234abcd1234abcd1234abcd",
-	"member": "1234abcd1234abcd1234abcd1234abcd",
-	"guest": "1234abcd1234abcd1234abcd1234abcd"
+        "admin": "1234abcd1234abcd1234abcd1234abcd",
+        "member": "1234abcd1234abcd1234abcd1234abcd",
+        "guest": "1234abcd1234abcd1234abcd1234abcd"
       }
     }
 
