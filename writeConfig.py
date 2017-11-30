@@ -113,9 +113,13 @@ if __name__ == '__main__':
 		print "Could not find keys in the config file: " + options.configFile
 		sys.exit(1)
 
-	adminKey = keys["admin"].decode("hex")	
+	adminKey = keys["admin"].decode("hex")
 	memberKey = keys["member"].decode("hex")	
-	guestKey = keys["guest"].decode("hex")	
+	guestKey = keys["guest"].decode("hex")
+
+	if (options.viaMesh):
+		print "Writing config via mesh is not available yet."
+		exit(1)
 
 	# Connect to peer device.
 	print "Connect to Bluetooth Low Energy device at address " + options.address
