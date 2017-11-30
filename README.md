@@ -21,17 +21,17 @@ Copy the default file `config.public.json` to `config.json` (the latter is the d
 
 Then fill in the address and keys:
 
-      {
-	"addresses":[
-	  "XX:XX:XX:XX:XX:XX"
-	],
-	"sphereId": "1234abcd1234abcd1234abcd",
-	"keys": {
-	  "admin": "1234abcd1234abcd1234abcd1234abcd",
-	  "member": "1234abcd1234abcd1234abcd1234abcd",
-	  "guest": "1234abcd1234abcd1234abcd1234abcd"
-	}
+    {
+      "addresses":[
+	"XX:XX:XX:XX:XX:XX"
+      ],
+      "sphereId": "1234abcd1234abcd1234abcd",
+      "keys": {
+	"admin": "1234abcd1234abcd1234abcd1234abcd",
+	"member": "1234abcd1234abcd1234abcd1234abcd",
+	"guest": "1234abcd1234abcd1234abcd1234abcd"
       }
+    }
 
 The send command script is most versatile. For example, to turn on a crownstone:
 
